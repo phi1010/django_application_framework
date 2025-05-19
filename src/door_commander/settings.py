@@ -246,13 +246,15 @@ if not POSTGRES_DB:
 else:
     POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
     POSTGRES_USER = os.getenv("POSTGRES_USER")
+    POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+    log.info(f"Using Postgres DB {POSTGRES_DB!r} on Host {POSTGRES_HOST!r}")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': POSTGRES_DB,
             'USER': POSTGRES_USER,
             'PASSWORD': POSTGRES_PASSWORD,
-            'HOST': 'db',
+            'HOST': POSTGRES_HOST,
         }
     }
 
