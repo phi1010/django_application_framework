@@ -50,6 +50,7 @@ services:
       &python-environment
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_URL: "http://opa:8181/"
+      OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
       OIDC_RP_CLIENT_SECRET:
       OIDC_OP_LOGOUT_URL:
