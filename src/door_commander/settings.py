@@ -367,8 +367,7 @@ with atomic_globals:
     OIDC_OP_LOGOUT_URL = os.environ['OIDC_OP_LOGOUT_URL']
     if OIDC_OP_LOGOUT_URL:
         OIDC_OP_LOGOUT_URL_METHOD = 'accounts.auth.provider_logout'
-    # TODO configuration option
-    OIDC_RP_SIGN_ALGO = "RS256"
+    OIDC_RP_SIGN_ALGO = os.environ['OIDC_RP_SIGN_ALGO'] # "RS256"
 if atomic_globals:
     OIDC = True
     INSTALLED_APPS += [
