@@ -103,7 +103,7 @@ services:
       dockerfile: Dockerfile
       target: python-web
       args:
-        PYTHON_VERSION: "3.10"
+        PYTHON_VERSION: "3.13"
     #image: python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
@@ -151,7 +151,7 @@ services:
       dockerfile: Dockerfile
       target: nginx
       args:
-        PYTHON_VERSION: "3.10"
+        PYTHON_VERSION: "3.13"
         NGINX_VERSION: 1-alpine
     depends_on:
       - python
