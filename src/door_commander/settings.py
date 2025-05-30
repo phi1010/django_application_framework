@@ -126,13 +126,7 @@ def load_or_create_secret_key() -> str:
 
 SECRET_KEY = load_or_create_secret_key()
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '[::1]',
-    'python',
-    'sesam.zam.haus',
-]
+ALLOWED_HOSTS = json.loads(os.environ.get("ALLOWED_HOSTS", "[]")) or ['localhost','127.0.0.1','[::1]','python']
 
 # ================================================================
 # Framework applications

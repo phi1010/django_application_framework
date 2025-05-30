@@ -50,6 +50,7 @@ services:
       &python-environment
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_URL: "http://opa:8181/"
+      ALLOWED_HOSTS:
       OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
       OIDC_RP_SIGN_ALGO:
