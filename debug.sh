@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set +eux
 echo "==== ENABLING DEBUG MODE! DO NOT USE ON PRODUCTION SERVER ===="
+echo "==== BE CAREFUL IN PUBLIC NETWORKS; THIS LISTENS ON ALL INTERFACES ===="
 export ACTIVATE_DEBUG_MODE=active
 
 set -o allexport; source .env; set +o allexport
