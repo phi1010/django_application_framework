@@ -26,7 +26,8 @@ log = logging.getLogger(__name__)
 
 def get_bundle(request, filename: str):
     # ic(request, filename)
-    # TODO auth
+    if not _authorize_with_bearer(request):
+        return HttpResponse('Unauthorized', status=401)
     match filename:
         case "door_authz.tar.gz":
             json_bytes = json.dumps(dict(foo=True, bar=False)).encode("utf8") + b"\n"
@@ -79,7 +80,7 @@ def _add_file_to_tar(tar, filename, fd):
 def post_decision_log(request: WSGIRequest, hostname):
     if not _authorize_with_bearer(request):
         return HttpResponse('Unauthorized', status=401)
-    ic(hostname, request.headers)
+    #ic(hostname, request.headers)
     body = request.body
     if request.headers.get("Content-Encoding") == "gzip":
         body = gzip.decompress(body)
