@@ -24,11 +24,17 @@ def get_bundle(request, filename:str):
     match filename:
         case "door_authz.tar.gz":
             json_bytes = json.dumps(dict(foo=True, bar=False)).encode("utf8") + b"\n"
-
+            rego_bytes = b"""
+                package app.door_commander.physical_access
+                
+                default allow = false
+            """
             def prepare_file(tar: tarfile.TarFile):
                 # The filename data.json is ignored when loading the data file,
-                # only the directories are regarded
+                # only the directories are used
                 _add_file_to_tar(tar, "example/data.json", io.BytesIO(json_bytes))
+                # For rego files, only the package declaration in the file is used.
+                _add_file_to_tar(tar, "policy.rego", io.BytesIO(rego_bytes))
 
             #fd = open(path_to_file, 'rb')
             fd = _make_tarfile(prepare_file)
