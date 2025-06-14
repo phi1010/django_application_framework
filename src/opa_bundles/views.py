@@ -26,7 +26,9 @@ def get_bundle(request, filename:str):
             json_bytes = json.dumps(dict(foo=True, bar=False)).encode("utf8") + b"\n"
 
             def prepare_file(tar: tarfile.TarFile):
-                _add_file_to_tar(tar, "data.json", io.BytesIO(json_bytes))
+                # The filename data.json is ignored when loading the data file,
+                # only the directories are regarded
+                _add_file_to_tar(tar, "example/data.json", io.BytesIO(json_bytes))
 
             #fd = open(path_to_file, 'rb')
             fd = _make_tarfile(prepare_file)
