@@ -34,6 +34,8 @@ services:
       OPA_DEBUG_MODE: 'unauthenticated'
       OPA_BUNDLE_SERVER_BEARER_TOKEN:
     image: "openpolicyagent/opa:latest"
+    depends_on:
+      - python
     networks:
       - opa
     ports: # []
@@ -41,6 +43,9 @@ services:
     volumes:
       - ./opa-client-prototype/:/data/:ro
       - opa-client-prototype-persistence:/var/opa/
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 
   nginx:
     ports:

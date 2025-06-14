@@ -11,7 +11,8 @@ services:
   django:
     # TODO use HTTPS when implementing this in a real client
     # HTTP is okay inside our docker compose stack
-    url: http://django/
+    # This is the URL to django started by debug.sh on localhost outside the container.
+    url: http://host.docker.internal:8000/
     response_header_timeout_seconds: 5
     credentials:
       bearer:

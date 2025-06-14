@@ -7,5 +7,5 @@ set -o allexport; source .env; set +o allexport
 COMPOSE="$COMPOSE -f docker-compose.yml -f docker-compose.debug.yml"
 . ./secrets.env
 $COMPOSE up opa db &
-(cd src; pipenv run ./manage.py runserver)
+(cd src; pipenv run ./manage.py runserver 0.0.0.0:8000)
 
