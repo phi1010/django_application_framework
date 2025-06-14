@@ -1,5 +1,10 @@
 #default_decision: /http/example/authz/allow
 
+door_commander:
+  # Additional data to use in the policies via: opa.runtime().door_commander.custom
+  environment: "rpi"
+  hostname: "door-controller-schiebetür"
+
 persistence_directory: /var/opa
 
 caching:
