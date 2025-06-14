@@ -25,19 +25,28 @@ services:
     environment:
       OPA_DEBUG_MODE: 'unauthenticated'
 
+  # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
+  opa-client-prototype-change-volume-uid:
+    image: ubuntu
+    command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
+    volumes:
+      - opa-client-prototype-persistence:/var/opa/
   # An OPA client configured similar to how it could run on an rpi.
   opa-client-prototype:
     # TODO =basic
-    command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
+    # TODO --authentication=token
+    #command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
+    command: run --server --addr :8181 -c /data/config.yaml /data/policy
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_DEBUG_MODE: 'unauthenticated'
       OPA_BUNDLE_SERVER_BEARER_TOKEN:
     image: "openpolicyagent/opa:latest"
     depends_on:
-      - python
-    networks:
-      - opa
+      - opa-client-prototype-change-volume-uid
+    #  - python
+    #networks:
+    #  - opa
     ports: # []
       - "127.0.0.1:8182:8181"
     volumes:
@@ -45,6 +54,10 @@ services:
       - opa-client-prototype-persistence:/var/opa/
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  test:
+    image: ubuntu
+
 
 
   nginx:
