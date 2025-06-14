@@ -15,6 +15,8 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from icecream import ic
 
+from door_commander.opa import get_polices
+
 log = logging.getLogger(__name__)
 
 
@@ -24,34 +26,14 @@ def get_bundle(request, filename:str):
     match filename:
         case "door_authz.tar.gz":
             json_bytes = json.dumps(dict(foo=True, bar=False)).encode("utf8") + b"\n"
-            rego_bytes = b"""
-                package app.door_commander.physical_access
-                
-                default allow = false
-            """
-            rego_authz_bytes = b"""
-                # The "system" namespace is reserved for internal use
-                # by OPA. Authorization policy must be defined under
-                # system.authz as follows:
-                package system.authz
-                
-                # TODO
-                default allow = false  # Reject requests by default.
-                
-                allow if {
-                    opa.runtime().env.OPA_BEARER_TOKEN == input.identity
-                }
-                allow if {
-                    opa.runtime()["env"]["OPA_DEBUG_MODE"] == "unauthenticated"
-                }
-            """
             def prepare_file(tar: tarfile.TarFile):
+                policies = get_polices()
+                for policy in policies:
+                    # For rego files, only the package declaration in the file is used.
+                    _add_file_to_tar(tar, policy.id, io.BytesIO(policy.raw.encode("utf8")))
                 # The filename data.json is ignored when loading the data file,
                 # only the directories are used
                 _add_file_to_tar(tar, "example/data.json", io.BytesIO(json_bytes))
-                # For rego files, only the package declaration in the file is used.
-                _add_file_to_tar(tar, "policy.rego", io.BytesIO(rego_bytes))
-                _add_file_to_tar(tar, "system/authz.rego", io.BytesIO(rego_authz_bytes))
 
             #fd = open(path_to_file, 'rb')
             fd = _make_tarfile(prepare_file)
