@@ -29,12 +29,29 @@ def get_bundle(request, filename:str):
                 
                 default allow = false
             """
+            rego_authz_bytes = b"""
+                # The "system" namespace is reserved for internal use
+                # by OPA. Authorization policy must be defined under
+                # system.authz as follows:
+                package system.authz
+                
+                # TODO
+                default allow = false  # Reject requests by default.
+                
+                allow if {
+                    opa.runtime().env.OPA_BEARER_TOKEN == input.identity
+                }
+                allow if {
+                    opa.runtime()["env"]["OPA_DEBUG_MODE"] == "unauthenticated"
+                }
+            """
             def prepare_file(tar: tarfile.TarFile):
                 # The filename data.json is ignored when loading the data file,
                 # only the directories are used
                 _add_file_to_tar(tar, "example/data.json", io.BytesIO(json_bytes))
                 # For rego files, only the package declaration in the file is used.
                 _add_file_to_tar(tar, "policy.rego", io.BytesIO(rego_bytes))
+                _add_file_to_tar(tar, "system/authz.rego", io.BytesIO(rego_authz_bytes))
 
             #fd = open(path_to_file, 'rb')
             fd = _make_tarfile(prepare_file)

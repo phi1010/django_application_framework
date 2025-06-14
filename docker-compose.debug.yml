@@ -33,12 +33,10 @@ services:
       - opa-client-prototype-persistence:/var/opa/
   # An OPA client configured similar to how it could run on an rpi.
   opa-client-prototype:
-    # TODO =basic
-    # TODO --authentication=token
-    #command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
-    command: run --server --addr :8181 -c /data/config.yaml /data/policy
+    command: run --server --addr :8181  --authentication=token --authorization=basic -c /data/config.yaml
+    #command: run --server --addr :8181  --authentication=token --log-level debug -c /data/config.yaml /data/policy
     environment:
-      OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
+      OPA_BEARER_TOKEN:
       OPA_DEBUG_MODE: 'unauthenticated'
       OPA_BUNDLE_SERVER_BEARER_TOKEN:
     image: "openpolicyagent/opa:latest"
