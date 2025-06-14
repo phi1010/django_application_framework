@@ -25,6 +25,26 @@ services:
     environment:
       OPA_DEBUG_MODE: 'unauthenticated'
 
+  # An OPA client configured similar to how it could run on an rpi.
+  opa-client-prototype:
+    # TODO =basic
+    command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
+    environment:
+      OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
+      OPA_DEBUG_MODE: 'unauthenticated'
+      OPA_BUNDLE_SERVER_BEARER_TOKEN:
+    image: "openpolicyagent/opa:latest"
+    networks:
+      - opa
+    ports: # []
+      - "127.0.0.1:8182:8181"
+    volumes:
+      - ./opa-client-prototype/:/data/:ro
+      - opa-client-prototype-persistence:/var/opa/
+
   nginx:
     ports:
       - "127.0.0.1:8080:80"
+
+volumes:
+  opa-client-prototype-persistence:

@@ -56,9 +56,17 @@ echo ::endgroup::
 
 
 echo ::group::OPA Bearer Token
+echo "Token used to connect the Django OPA client to the internal OPA server instance"
 OPA_BEARER_TOKEN="$(generate_password)"
 export OPA_BEARER_TOKEN
 declare -p OPA_BEARER_TOKEN >>secrets.env
+echo ::endgroup::
+
+echo ::group::OPA Bearer Token
+echo "Token used to connect an OPA client instance to the Django bundle server"
+OPA_BUNDLE_SERVER_BEARER_TOKEN="$(generate_password)"
+export OPA_BUNDLE_SERVER_BEARER_TOKEN
+declare -p OPA_BUNDLE_SERVER_BEARER_TOKEN >>secrets.env
 echo ::endgroup::
 
 

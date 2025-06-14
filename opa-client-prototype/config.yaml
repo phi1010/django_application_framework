@@ -1,0 +1,27 @@
+#default_decision: /http/example/authz/allow
+
+persistence_directory: /var/opa
+
+caching:
+  inter_query_builtin_cache:
+    max_size_bytes: 10000000
+
+
+services:
+  django:
+    # TODO use HTTPS when implementing this in a real client
+    # HTTP is okay inside our docker compose stack
+    url: http://django/
+    response_header_timeout_seconds: 5
+    credentials:
+      bearer:
+        token: "${OPA_BUNDLE_SERVER_BEARER_TOKEN}"
+
+bundles:
+  door_authz:
+    service: django
+    resource: opa-bundles/door_authz.tar.gz
+    persist: true
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 20
