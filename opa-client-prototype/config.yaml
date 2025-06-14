@@ -3,7 +3,7 @@
 door_commander:
   # Additional data to use in the policies via: opa.runtime().door_commander.custom
   environment: "rpi"
-  hostname: "door-controller-schiebetür"
+  hostname: "door-controller-schiebetuer"
 
 persistence_directory: /var/opa
 
@@ -26,8 +26,16 @@ services:
 bundles:
   door_authz:
     service: django
-    resource: opa-bundles/door_authz.tar.gz
+    resource: opa-bundles/bundles/door_authz.tar.gz
     persist: true
     polling:
       min_delay_seconds: 10
       max_delay_seconds: 20
+
+
+decision_logs:
+  service: django
+  resource: opa-bundles/decision-log/door-controller-schiebetuer
+  reporting:
+    min_delay_seconds: 10
+    max_delay_seconds: 20
