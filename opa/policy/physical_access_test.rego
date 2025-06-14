@@ -4,7 +4,7 @@ package app.door_commander.physical_access
 
 
 
-test_allow_by_role {
+test_allow_by_role if {
     allow_member_open with input as {
           "action": "open",
           "door": {
@@ -109,12 +109,12 @@ test_allow_by_role {
 
 
 
-test_no_input {
+test_no_input if {
     not allow_member_open with input as {}
 }
 
 
-test_deny_wrong_door {
+test_deny_wrong_door if {
     not allow_member_open with input as {
           "action": "open",
           "door": {
@@ -218,7 +218,7 @@ test_deny_wrong_door {
 }
 
 
-test_deny_wrong_role {
+test_deny_wrong_role if {
     not allow_member_open with input as {
           "action": "open",
           "door": {
@@ -320,7 +320,7 @@ test_deny_wrong_role {
         }
 }
 
-test_deny_wrong_location {
+test_deny_wrong_location if {
     not allow_member_open with input as {
           "action": "open",
           "door": {
