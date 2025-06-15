@@ -42,8 +42,8 @@ def _prepare_file(tar: tarfile.TarFile, include_user_data=False, include_sidecar
         _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
     for file in path.glob("**/*.json"):
         log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
-        # The filename data.json is ignored when loading the data file,
-        # only the directories are used
+        # Only the filename data.json is accepted when loading the data file,
+        # only the directories are used for the location in the data tree
         _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
 
 
@@ -62,8 +62,10 @@ def get_bundle(request, filename: str):
             return _make_file_download_response(fd, download_filename)
 
         case "sidecar_authz.tar.gz":
+            #ic(authorization)
             # Only the sidecar may access the PII data bundle, the RPis are not allowed to.
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
+                log.warning("Unauthorized sidecar authorization request")
                 return HttpResponse('Unauthorized', status=401)
             fd = _make_tarfile(_prepare_file)  # TODO include more data
             return _make_file_download_response(fd, download_filename)
@@ -149,6 +151,9 @@ def _authorize_with_bearer(request: WSGIRequest):
     bearer = request.headers.get("Authorization", None)
     BEARER = "Bearer "
     if not bearer or not bearer.startswith(BEARER):
+        if settings.DEBUG:
+            log.info("Client authorized by debug mode, no Bearer was provided.")
+            return OpaSidecarTokenAuthorization()
         return None
     token = bearer.lstrip(BEARER)
     # ic(token)
