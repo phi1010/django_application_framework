@@ -6,6 +6,7 @@ import tarfile
 import time
 import io
 import gzip
+from dataclasses import dataclass
 
 from django.core import serializers
 from django.contrib.auth.decorators import login_required, permission_required
@@ -26,7 +27,7 @@ log = logging.getLogger(__name__)
 
 def get_bundle(request, filename: str):
     # ic(request, filename)
-    if not _authorize_with_bearer(request):
+    if not (authorization := _authorize_with_bearer(request)):
         return HttpResponse('Unauthorized', status=401)
     match filename:
         case "door_authz.tar.gz":
@@ -45,6 +46,11 @@ def get_bundle(request, filename: str):
             fd = _make_tarfile(prepare_file)
             file_name = filename.split("/")[-1]
             return _make_file_download_response(fd, file_name)
+        case "sidecar_authz.tar.gz":
+            # Only the sidecar may access the PII data bundle, the RPis are not allowed to.
+            if not isinstance(authorization, OpaSidecarTokenAuthorization):
+                return HttpResponse('Unauthorized', status=401)
+            return HttpResponse('Not Implemented', status=500) # TODO
         case _:
             return HttpResponseNotFound()
     # return redirect("https://betreiberverein.de/impressum/")
@@ -104,16 +110,32 @@ def post_decision_log(request: WSGIRequest, hostname):
     return HttpResponse("OK")
 
 
+@dataclass
+class OpaClientTokenAuthorization:
+    "An OPA running on an RPi"
+    pass
+
+@dataclass
+class OpaSidecarTokenAuthorization:
+    "The OPA included in the docker compose file"
+    pass
+
 def _authorize_with_bearer(request: WSGIRequest):
     bearer = request.headers.get("Authorization", None)
     BEARER = "Bearer "
     if not bearer or not bearer.startswith(BEARER):
-        return False
+        return None
     token = bearer.lstrip(BEARER)
     # ic(token)
-    authorized = settings.OPA_BUNDLE_SERVER_BEARER_TOKEN == token
+    match token:
+        case settings.OPA_BUNDLE_SERVER_BEARER_TOKEN:
+            authorized = OpaClientTokenAuthorization()
+        case settings.OPA_BEARER_TOKEN:
+            authorized = OpaSidecarTokenAuthorization()
+        case _:
+            authorized = None
     log.debug(
-        f"Request from {request.META['REMOTE_ADDR']} to OPA bundles / decision log API was authorized: {authorized}")
+        f"Request from {request.META['REMOTE_ADDR']} to OPA bundles / decision log API was authorized as {authorized}")
     return authorized
 
 
