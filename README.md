@@ -49,3 +49,4 @@ Authentication for the OPA server is disabled in debug containers
 
 The bundle server is available at http://127.0.0.1:8000/opa-bundles/bundles/sidecar_authz.tar.gz when running debug.sh.
 
+The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh can be accessed via http://127.0.0.1:8182/v1/data .
