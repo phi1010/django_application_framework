@@ -115,3 +115,26 @@ def _authorize_with_bearer(request: WSGIRequest):
     log.debug(
         f"Request from {request.META['REMOTE_ADDR']} to OPA bundles / decision log API was authorized: {authorized}")
     return authorized
+
+
+# OPA calls this with POST, so CSRF protection needs to be disabled
+@csrf_exempt
+def post_status(request:WSGIRequest, hostname:str):
+    if not _authorize_with_bearer(request):
+        return HttpResponse('Unauthorized', status=401)
+    # ic(hostname, request.headers)
+    body = request.body
+    if request.headers.get("Content-Encoding") == "gzip":
+        body = gzip.decompress(body)
+    if not request.headers.get("Content-Type") == "application/json":
+        raise Exception("Unsupported Content-Type")
+    body = body.decode("utf-8")
+    data = json.loads(body)
+    bundles_status = data.get("bundles", None)
+    #decision_logs_status = data.get("decision_logs", None)
+    version = data.get("labels", dict()).get("version", None)
+    #ic(bundles_status, version)
+    log.debug(f"On {hostname!r} bundle status: {bundles_status!r}")
+    log.debug(f"On {hostname!r} version status: {version!r}")
+
+    return HttpResponse("OK")
