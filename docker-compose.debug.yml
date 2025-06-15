@@ -24,6 +24,9 @@ services:
       - "127.0.0.1:8181:8181"
     environment:
       OPA_DEBUG_MODE: 'unauthenticated'
+      OPA_BUNDLE_SERVER_URL: "http://host.docker.internal:8000/opa-bundles/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
   opa-client-prototype-change-volume-uid:

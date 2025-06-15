@@ -7,6 +7,7 @@ import time
 import io
 import gzip
 from dataclasses import dataclass
+from pathlib import Path
 
 from django.core import serializers
 from django.contrib.auth.decorators import login_required, permission_required
@@ -25,41 +26,57 @@ from door_commander.opa import get_polices
 log = logging.getLogger(__name__)
 
 
+def _prepare_file(tar: tarfile.TarFile, include_user_data=False, include_sidecar_data=False):
+    """
+    :param tar:
+    :param include_user_data: True if data of django users should be included in this file
+    :param include_sidecar_data: True if data from OPA sidecar should be included in this file
+    :return:
+    """
+    path = Path(settings.OPA_BUNDLE_DIRECTORY)
+    if not path.exists():
+        raise Exception('Bundle directory does not exist')
+    for file in path.glob("**/*.rego"):
+        log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
+        # For rego files, only the package declaration in the file is used.
+        _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
+    for file in path.glob("**/*.json"):
+        log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
+        # The filename data.json is ignored when loading the data file,
+        # only the directories are used
+        _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
+
+
 def get_bundle(request, filename: str):
     # ic(request, filename)
     if not (authorization := _authorize_with_bearer(request)):
         return HttpResponse('Unauthorized', status=401)
+
+    download_filename = filename.split("/")[-1]
+
     match filename:
+
         case "door_authz.tar.gz":
-            json_bytes = json.dumps(dict(foo=True, bar=False)).encode("utf8") + b"\n"
-
-            def prepare_file(tar: tarfile.TarFile):
-                policies = get_polices()
-                for policy in policies:
-                    # For rego files, only the package declaration in the file is used.
-                    _add_file_to_tar(tar, policy.id, io.BytesIO(policy.raw.encode("utf8")))
-                # The filename data.json is ignored when loading the data file,
-                # only the directories are used
-                _add_file_to_tar(tar, "example/data.json", io.BytesIO(json_bytes))
-
             # fd = open(path_to_file, 'rb')
-            fd = _make_tarfile(prepare_file)
-            file_name = filename.split("/")[-1]
-            return _make_file_download_response(fd, file_name)
+            fd = _make_tarfile(_prepare_file)
+            return _make_file_download_response(fd, download_filename)
+
         case "sidecar_authz.tar.gz":
             # Only the sidecar may access the PII data bundle, the RPis are not allowed to.
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
                 return HttpResponse('Unauthorized', status=401)
-            return HttpResponse('Not Implemented', status=500) # TODO
+            fd = _make_tarfile(_prepare_file) # TODO include more data
+            return _make_file_download_response(fd, download_filename)
+
         case _:
             return HttpResponseNotFound()
     # return redirect("https://betreiberverein.de/impressum/")
 
 
-def _make_tarfile(prepare_file):
+def _make_tarfile(prepare_file, **kwargs):
     fd = io.BytesIO(b"")
     tar = tarfile.open(name=None, mode='w:gz', fileobj=fd)
-    prepare_file(tar)
+    prepare_file(tar, **kwargs)
     tar.close()
     # ic(fd, fd.tell())
     # Seek to the start of the written tarfile
@@ -84,9 +101,15 @@ def _add_file_to_tar(tar, filename, fd):
 # OPA calls this with POST, so CSRF protection needs to be disabled
 @csrf_exempt
 def post_decision_log(request: WSGIRequest, hostname):
-    if not _authorize_with_bearer(request):
+    if not (authorization := _authorize_with_bearer(request)):
         return HttpResponse('Unauthorized', status=401)
-    #ic(hostname, request.headers)
+
+    if isinstance(authorization, OpaSidecarTokenAuthorization):
+        # We don't want to log decision logs from the local OPA instance,
+        # we can have them in the console
+        return HttpResponse("OK", status=200)
+
+    # ic(hostname, request.headers)
     body = request.body
     if request.headers.get("Content-Encoding") == "gzip":
         body = gzip.decompress(body)
@@ -95,11 +118,11 @@ def post_decision_log(request: WSGIRequest, hostname):
     body = body.decode("utf-8")
     data = json.loads(body)
     for decision in data:
-        #ic(decision)
-        result = decision.get("result",None)
-        input = decision.get("input",None)
-        path = decision.get("path",None)
-        timestamp = decision.get("timestamp",None)
+        # ic(decision)
+        result = decision.get("result", None)
+        input = decision.get("input", None)
+        path = decision.get("path", None)
+        timestamp = decision.get("timestamp", None)
         log.info(
             f"Decision logged by {hostname!r}:\n"
             f"Input= {input!r}\n"
@@ -115,10 +138,12 @@ class OpaClientTokenAuthorization:
     "An OPA running on an RPi"
     pass
 
+
 @dataclass
 class OpaSidecarTokenAuthorization:
     "The OPA included in the docker compose file"
     pass
+
 
 def _authorize_with_bearer(request: WSGIRequest):
     bearer = request.headers.get("Authorization", None)
@@ -141,7 +166,7 @@ def _authorize_with_bearer(request: WSGIRequest):
 
 # OPA calls this with POST, so CSRF protection needs to be disabled
 @csrf_exempt
-def post_status(request:WSGIRequest, hostname:str):
+def post_status(request: WSGIRequest, hostname: str):
     if not _authorize_with_bearer(request):
         return HttpResponse('Unauthorized', status=401)
     # ic(hostname, request.headers)
@@ -153,9 +178,9 @@ def post_status(request:WSGIRequest, hostname:str):
     body = body.decode("utf-8")
     data = json.loads(body)
     bundles_status = data.get("bundles", None)
-    #decision_logs_status = data.get("decision_logs", None)
+    # decision_logs_status = data.get("decision_logs", None)
     version = data.get("labels", dict()).get("version", None)
-    #ic(bundles_status, version)
+    # ic(bundles_status, version)
     log.debug(f"On {hostname!r} bundle status: {bundles_status!r}")
     log.debug(f"On {hostname!r} version status: {version!r}")
 

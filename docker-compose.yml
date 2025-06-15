@@ -50,6 +50,7 @@ services:
       &python-environment
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_URL: "http://opa:8181/"
+      OPA_BUNDLE_DIRECTORY: "/data/opa-bundle"
       ALLOWED_HOSTS:
       OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
@@ -108,6 +109,7 @@ services:
     #image: python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
+      - "./opa/policy:/data/opa-bundle:ro"
     networks:
       - db
       - opa
@@ -135,6 +137,7 @@ services:
     command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
+      OPA_BUNDLE_SERVER_URL: "http://python:8000/opa-bundles/"
     image: "openpolicyagent/opa:latest"
     networks:
       - opa

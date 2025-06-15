@@ -220,6 +220,7 @@ WSGI_APPLICATION = 'door_commander.wsgi.application'
 OPA_BEARER_TOKEN = os.getenv("OPA_BEARER_TOKEN") or ""
 OPA_BUNDLE_SERVER_BEARER_TOKEN = os.getenv("OPA_BUNDLE_SERVER_BEARER_TOKEN") or ""
 OPA_URL = os.getenv("OPA_URL")
+OPA_BUNDLE_DIRECTORY = os.getenv("OPA_BUNDLE_DIRECTORY") or ""
 
 # ================================================================
 # Database
