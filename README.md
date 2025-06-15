@@ -1,11 +1,4 @@
-# Wichtiges zur Nutzung
-
-./set-secrets.sh löscht secrets an lustigen Stellen - NICHT in einem schon konfigurierten Umfeld nutzen, sonst ist alles kaputt:
-
- * Türenzugangsdaten werden in der mosquitto.passwd gelöscht
-
-
-# Alte "Readme"
+# Readme
 
 0. Set your compose environment in .env (`docker compose` on Ubuntu, `docker-compose` on Debian, `podman-compose` if using Podman)
 1. Add the hostname 
