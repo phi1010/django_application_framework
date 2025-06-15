@@ -65,7 +65,7 @@ def get_bundle(request, filename: str):
             # Only the sidecar may access the PII data bundle, the RPis are not allowed to.
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
                 return HttpResponse('Unauthorized', status=401)
-            fd = _make_tarfile(_prepare_file) # TODO include more data
+            fd = _make_tarfile(_prepare_file)  # TODO include more data
             return _make_file_download_response(fd, download_filename)
 
         case _:
@@ -123,11 +123,11 @@ def post_decision_log(request: WSGIRequest, hostname):
         input = decision.get("input", None)
         path = decision.get("path", None)
         timestamp = decision.get("timestamp", None)
-        log.info(
+        log.getChild("decision_log").info(
             f"Decision logged by {hostname!r}:\n"
-            f"Input= {input!r}\n"
-            f"Path= {path!r}\n"
             f"Timestamp= {timestamp!r}\n"
+            f"Path= {path!r}\n"
+            f"Input= {input!r}\n"
             f"Result= {result!r}"
         )
     return HttpResponse("OK")
@@ -181,7 +181,10 @@ def post_status(request: WSGIRequest, hostname: str):
     # decision_logs_status = data.get("decision_logs", None)
     version = data.get("labels", dict()).get("version", None)
     # ic(bundles_status, version)
-    log.debug(f"On {hostname!r} bundle status: {bundles_status!r}")
-    log.debug(f"On {hostname!r} version status: {version!r}")
+    log.getChild("status").info(
+        f"On {hostname!r}:\n"
+        f"bundle status: {bundles_status!r}\n"
+        f"version status: {version!r}"
+    )
 
     return HttpResponse("OK")
