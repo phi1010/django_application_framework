@@ -24,10 +24,10 @@ if [[ ! $MQTT_PASSWD_CONTROLLER ]] ; then
   MQTT_PASSWD_CONTROLLER="$(generate_password)"
   export MQTT_PASSWD_CONTROLLER
   declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
-  echo "Check mosquitto/config/mosquitto.passwd for duplicates!"
-  touch mosquitto/config/mosquitto.passwd || true # otherwise a directory will be created
 fi
-$COMPOSE run --rm mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
+echo "Remove mosquitto/config/dynamic-security.json if you want to reset the admin password to the one written in secrets.env"
+$COMPOSE run --rm mqtt mosquitto_ctrl dynsec init /mosquitto/config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
+./mqtt-dynsec.sh addroleacl admin publishClientSend '#' allow 0 || true
 echo ::endgroup::
 
 

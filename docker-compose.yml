@@ -10,9 +10,7 @@ services:
     volumes:
       - door-commander-mosquitto-log:/mosquitto/log
       - door-commander-mosquitto-data:/mosquitto/data
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./mosquitto/config/mosquitto.acl:/mosquitto/config/mosquitto.acl:ro
-      - ./mosquitto/config/mosquitto.passwd:/mosquitto/config/mosquitto.passwd
+      - ./mosquitto/config/:/mosquitto/config/
     networks:
       - web
       - mqtt
