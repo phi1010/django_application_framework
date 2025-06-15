@@ -132,7 +132,12 @@ services:
     networks:
       - db
       - opa
-
+  # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
+  opa-change-volume-uid:
+    image: ubuntu
+    command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
+    volumes:
+      - opa-persistence:/var/opa/
   opa:
     command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
     environment:
@@ -146,7 +151,8 @@ services:
     volumes:
       - ./opa/:/data/:ro
       - opa-persistence:/var/opa/
-
+    depends_on:
+      - opa-change-volume-uid
 
   nginx:
     build:
