@@ -6,7 +6,8 @@ from django.forms.widgets import TextInput
 
 from door_commander.random_passwords import generate_password
 from doors.models import Door, RemoteClient
-from doors import door_names_publisher
+from doors import door_names_publisher, mqtt_admin_publisher
+from doors.mqtt_dynsec import admin_mqtt
 
 
 class DoorForm(ModelForm):
@@ -54,5 +55,5 @@ class RemoteClientAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super(RemoteClientAdmin, self).save_model(request, obj, form, change)
-        # TODO create MQTT client: door_names_publisher.publish_door_name(obj)
+        mqtt_admin_publisher.update_mqtt_client(obj)
 

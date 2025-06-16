@@ -118,7 +118,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SECRET_KEY = os.getenv("DJANGO_SECRET", "")
 if not SECRET_KEY:
-    raise Exception("Secret key not set")
+    log.error("Secret key not set")
 
 # https://github.com/jazzband/django-fernet-encrypted-fields
 SALT_KEY = os.getenv("DJANGO_SALT")
