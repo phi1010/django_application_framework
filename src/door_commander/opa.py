@@ -62,10 +62,10 @@ def get_auth_header():
 
 
 def get_allowed_result(path, function, key="allow"):
-    return get_data_result(path, function)[key] is True
+    return get_data_result(path+"/"+key, function) is True
 
 def check_allowed(path, function):
-    if get_data_result(path, function)["allow"] is True:
+    if get_data_result(path+"/allow", function) is True:
         return
     else:
         raise Exception("Unauthorized")  # TODO 401/403
