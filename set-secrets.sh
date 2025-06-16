@@ -56,6 +56,22 @@ echo ::endgroup::
 
 
 
+echo ::group::Django Secret
+if [[ ! $DJANGO_SECRET ]] ; then
+  DJANGO_SECRET="$(generate_password)"
+  export DJANGO_SECRET
+  declare -p DJANGO_SECRET >>secrets.env
+fi
+echo ::endgroup::
+
+echo ::group::Django Encrypted Fields Salt
+if [[ ! $DJANGO_SALT ]] ; then
+  DJANGO_SALT="$(generate_password)"
+  export DJANGO_SALT
+  declare -p DJANGO_SALT >>secrets.env
+fi
+echo ::endgroup::
+
 echo ::group::OPA Bearer Token
 if [[ ! $OPA_BEARER_TOKEN ]] ; then
   echo "Token used to connect the Django OPA client to the internal OPA server instance"

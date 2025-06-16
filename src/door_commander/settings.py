@@ -90,6 +90,11 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
         'django.db.backends': {
             'level': 'DEBUG',
             'handlers': ['console'],
+        },
+        # Don't show OPA sidecar activity when debugging
+        'opa_bundles.views': {
+            'level': 'WARNING',
+            'handlers': ['console'],
         }
     },
 }
@@ -109,22 +114,14 @@ DEBUG = bool(os.getenv('ACTIVATE_DEBUG_MODE'))
 # this allows to use {% if debug %} in django templates.
 INTERNAL_IPS = ['127.0.0.1', '::1']
 
-SECRET_KEY_FILE = BASE_DIR.joinpath("./data/django-secret-key.json")
-
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-def load_or_create_secret_key() -> str:
-    # TODO we now pass all secrets via environment, we might want to do this here too.
-    if SECRET_KEY_FILE.exists():
-        secret = json.load(open(SECRET_KEY_FILE, "r"))
-        return secret
-    else:
-        secret = get_random_secret_key()
-        json.dump(secret, open(SECRET_KEY_FILE, "w"))
-        return secret
+SECRET_KEY = os.getenv("DJANGO_SECRET", "")
+if not SECRET_KEY:
+    raise Exception("Secret key not set")
 
-
-SECRET_KEY = load_or_create_secret_key()
+# https://github.com/jazzband/django-fernet-encrypted-fields
+SALT_KEY = os.getenv("DJANGO_SALT")
 
 ALLOWED_HOSTS = json.loads(os.environ.get("ALLOWED_HOSTS", "[]")) or ['localhost','127.0.0.1','[::1]','python']
 
