@@ -22,6 +22,7 @@ from icecream import ic
 
 from door_commander import settings
 from door_commander.opa import get_polices
+from doors.models import RemoteClient
 
 log = logging.getLogger(__name__)
 
@@ -163,7 +164,11 @@ def _authorize_with_bearer(request: WSGIRequest):
         case settings.OPA_BEARER_TOKEN:
             authorized = OpaSidecarTokenAuthorization()
         case _:
-            authorized = None
+            # don't use get(token=...) since that doesn't work for encrypted fields.
+            if any(x for x in RemoteClient.objects.all() if x.token == token):
+                authorized = OpaClientTokenAuthorization()
+            else:
+                authorized = None
     log.debug(
         f"Request from {request.META['REMOTE_ADDR']} to OPA bundles / decision log API was authorized as {authorized}")
     return authorized
