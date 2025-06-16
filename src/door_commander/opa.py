@@ -29,8 +29,8 @@ def get_polices():
         policies = [Policy(item["id"], item["raw"]) for item in result]
         log.debug(f"Loaded policies: {policies}")
         return policies
-    except:
-        raise Exception("Querying OPA failed")
+    except Exception as e:
+        raise Exception(f"OPA query failed: {e}")
 
 def get_query_result(query, function):
     """
@@ -53,8 +53,8 @@ def get_query_result(query, function):
 
         result_wrapper = response.json()
         result = result_wrapper["result"]
-    except:
-        raise Exception("Auth check failed")
+    except Exception as e:
+        raise Exception(f"OPA query failed: {e}")
 
 
 def get_auth_header():
@@ -91,14 +91,14 @@ def get_data_result(path, function):
         response = requests.post(fullurl, json=input, headers=get_auth_header())
 
         if response.status_code != 200:
-            raise Exception("Auth failed")
+            raise Exception("OPA query failed")
 
         result = response.json()
         # log.setLevel(logging.DEBUG)
         log.debug("Return authorization result %s", ic.format(path, input, result))
-        return result['result']
+        return result['result'] if 'result' in result else None
     except Exception as e:
-        raise Exception("Auth check failed")
+        raise Exception(f"OPA query failed: {e}")
 
 
 def create_default_input(function):

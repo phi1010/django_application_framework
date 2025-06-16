@@ -7,6 +7,7 @@ import time
 import io
 import gzip
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 
 from django.core import serializers
@@ -20,8 +21,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from icecream import ic
 
+from accounts.models import User
 from door_commander import settings
-from door_commander.opa import get_polices
+from door_commander.opa import get_polices, get_data_result
+from doors.models import Door
+from web_homepage.views import serialize_model
 
 log = logging.getLogger(__name__)
 
@@ -36,15 +40,35 @@ def _prepare_file(tar: tarfile.TarFile, include_user_data=False, include_sidecar
     path = Path(settings.OPA_BUNDLE_DIRECTORY)
     if not path.exists():
         raise Exception('Bundle directory does not exist')
+
     for file in path.glob("**/*.rego"):
         log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
         # For rego files, only the package declaration in the file is used.
         _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
+
     for file in path.glob("**/*.json"):
         log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
         # Only the filename data.json is accepted when loading the data file,
         # only the directories are used for the location in the data tree
         _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
+
+    if include_sidecar_data:
+        data = get_data_result("app/door_commander/door_authz", None)
+        _add_file_to_tar(tar, "sidecar/data.json", BytesIO(json.dumps(data).encode("utf-8")))
+        log.debug(f"Delivering sidecar data as sidecar/data.json")
+
+    if include_user_data:
+        users = {str(user.pk): dict(
+            user=serialize_model(user),
+            permissions=[serialize_model(p) for p in user.user_permissions.all()],
+            connections=[serialize_model(c) for c in user.connections.all()],
+        ) for user in User.objects.all()}
+        doors={str(door.pk): dict(
+            door=serialize_model(door),
+        ) for door in Door.objects.all()}
+        data = dict(users=users, doors=doors)
+        _add_file_to_tar(tar, "django/data.json", BytesIO(json.dumps(data).encode("utf-8")))
+        log.debug(f"Delivering django data as django/data.json")
 
 
 def get_bundle(request, filename: str):
@@ -58,16 +82,16 @@ def get_bundle(request, filename: str):
 
         case "door_authz.tar.gz":
             # fd = open(path_to_file, 'rb')
-            fd = _make_tarfile(_prepare_file)
+            fd = _make_tarfile(_prepare_file, include_sidecar_data=True)
             return _make_file_download_response(fd, download_filename)
 
         case "sidecar_authz.tar.gz":
-            #ic(authorization)
+            # ic(authorization)
             # Only the sidecar may access the PII data bundle, the RPis are not allowed to.
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
                 log.warning("Unauthorized sidecar authorization request")
                 return HttpResponse('Unauthorized', status=401)
-            fd = _make_tarfile(_prepare_file)  # TODO include more data
+            fd = _make_tarfile(_prepare_file, include_user_data=True)  # TODO include more data
             return _make_file_download_response(fd, download_filename)
 
         case _:
