@@ -165,6 +165,7 @@ def _authorize_with_bearer(request: WSGIRequest):
             authorized = OpaSidecarTokenAuthorization()
         case _:
             # don't use get(token=...) since that doesn't work for encrypted fields.
+            # TODO split from username:token for efficiency
             if any(x for x in RemoteClient.objects.all() if x.token == token):
                 authorized = OpaClientTokenAuthorization()
             else:
