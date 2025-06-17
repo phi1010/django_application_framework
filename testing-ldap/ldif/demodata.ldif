@@ -24,7 +24,7 @@ dn: uid=asmith,ou=users,dc=example,dc=org
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: shadowAccount
-cn:: Rk9POkJBUg==
+cn: Audrey Smith
 sn: Smith
 uid: asmith
 uidNumber: 1001
@@ -33,10 +33,10 @@ homeDirectory: /home/asmith
 loginShell: /bin/bash
 mail: asmith@example.org
 userPassword: secret456
-displayName:: Audrey Smith
+displayName: Audrey Smith
 telephoneNumber: +1 555 987 6543
 employeeNumber: 12346
-description:: Demo user Audrey Smith
+description: Demo user Audrey Smith
 
 dn: cn=users,ou=users,dc=example,dc=org
 objectClass: posixGroup
@@ -50,16 +50,3 @@ objectClass: groupOfNames
 cn: admins
 member: uid=jdoe,ou=users,dc=example,dc=org
 description: Admin group with John Doe as member
-
-dn: cn=MayOpenNordEG,ou=users,dc=example,dc=org
-objectClass: groupOfNames
-cn: MayOpenNordEG
-member: uid=jdoe,ou=users,dc=example,dc=org
-member: uid=asmith,ou=users,dc=example,dc=org
-description: Demo group
-
-dn: cn=MayOpenNordUG,ou=users,dc=example,dc=org
-objectClass: groupOfNames
-cn: MayOpenNordUG
-member: uid=asmith,ou=users,dc=example,dc=org
-description: Demo group
