@@ -226,6 +226,7 @@ OPA_URL = os.getenv("OPA_URL")
 
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
 LDAP_BIND_DN = os.getenv("LDAP_BIND_DN")
+LDAP_PASSWORD = os.getenv("LDAP_PASSWORD")
 LDAP_URL = os.getenv("LDAP_URL")
 
 # ================================================================
