@@ -50,6 +50,7 @@ services:
       &python-environment
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_URL: "http://opa:8181/"
+      OPA_BUNDLE_DIRECTORY: "/data/opa-bundle"
       ALLOWED_HOSTS:
       OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
@@ -59,6 +60,7 @@ services:
       OIDC_OP_USER_ENDPOINT:
       OIDC_OP_AUTHORIZATION_ENDPOINT:
       OIDC_OP_TOKEN_ENDPOINT:
+      OPA_BUNDLE_SERVER_BEARER_TOKEN:
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD_DJANGO}'
       POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
       POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
@@ -107,6 +109,7 @@ services:
     #image: python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
+      - "./opa/policy:/data/opa-bundle:ro"
     networks:
       - db
       - opa
@@ -129,12 +132,17 @@ services:
     networks:
       - db
       - opa
-
+  # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
+  opa-change-volume-uid:
+    image: ubuntu
+    command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
+    volumes:
+      - opa-persistence:/var/opa/
   opa:
-    # TODO =basic
     command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
+      OPA_BUNDLE_SERVER_URL: "http://python:8000/opa-bundles/"
     image: "openpolicyagent/opa:latest"
     networks:
       - opa
@@ -143,7 +151,8 @@ services:
     volumes:
       - ./opa/:/data/:ro
       - opa-persistence:/var/opa/
-
+    depends_on:
+      - opa-change-volume-uid
 
   nginx:
     build:

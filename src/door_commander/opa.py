@@ -1,5 +1,6 @@
 import logging
 import urllib.parse
+from dataclasses import dataclass
 
 import requests
 from icecream import ic
@@ -7,6 +8,29 @@ from django.conf import settings
 
 log = logging.getLogger(__name__)
 
+@dataclass
+class Policy:
+    id:str
+    raw:str
+    def __repr__(self):
+        return f"Policy(id={self.id!r}, raw={self.raw[:100]!r}...)"
+
+def get_polices():
+    try:
+        url = settings.OPA_URL
+        token = settings.OPA_BEARER_TOKEN
+        response = requests.get(url + "/v1/policies", headers=get_auth_header())
+
+        if response.status_code != 200:
+            raise Exception("Querying OPA failed")
+
+        result_wrapper = response.json()
+        result = result_wrapper["result"]
+        policies = [Policy(item["id"], item["raw"]) for item in result]
+        log.debug(f"Loaded policies: {policies}")
+        return policies
+    except:
+        raise Exception("Querying OPA failed")
 
 def get_query_result(query, function):
     """

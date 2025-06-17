@@ -1,11 +1,4 @@
-# Wichtiges zur Nutzung
-
-./set-secrets.sh löscht secrets an lustigen Stellen - NICHT in einem schon konfigurierten Umfeld nutzen, sonst ist alles kaputt:
-
- * Türenzugangsdaten werden in der mosquitto.passwd gelöscht
-
-
-# Alte "Readme"
+# Readme
 
 0. Set your compose environment in .env (`docker compose` on Ubuntu, `docker-compose` on Debian, `podman-compose` if using Podman)
 1. Add the hostname 
@@ -46,3 +39,7 @@ result := data.app.door_commander.physical_access
 ```
 
 Authentication for the OPA server is disabled in debug containers
+
+The bundle server is available at http://127.0.0.1:8000/opa-bundles/bundles/sidecar_authz.tar.gz when running debug.sh.
+
+The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh can be accessed via http://127.0.0.1:8182/v1/data .
