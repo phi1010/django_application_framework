@@ -73,3 +73,8 @@ services:
   nginx:
     ports:
       - "127.0.0.1:8080:80"
+
+volumes:
+  opa-client-prototype-persistence:
+  ldap-data:
+  ldap-config:
