@@ -221,6 +221,14 @@ OPA_BEARER_TOKEN = os.getenv("OPA_BEARER_TOKEN") or ""
 OPA_URL = os.getenv("OPA_URL")
 
 # ================================================================
+# LDAP
+# ================================================================
+
+LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
+LDAP_BIND_DN = os.getenv("LDAP_BIND_DN")
+LDAP_URL = os.getenv("LDAP_URL")
+
+# ================================================================
 # Database
 # ================================================================
 

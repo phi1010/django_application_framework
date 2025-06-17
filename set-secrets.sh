@@ -68,6 +68,11 @@ OIDC_RP_CLIENT_SECRET=""
 export OIDC_RP_CLIENT_SECRET
 declare -p OIDC_RP_CLIENT_SECRET >> secrets.env
 
+echo "TODO: You need to provide LDAP_PASSWORD manually."
+LDAP_PASSWORD="password"
+export LDAP_PASSWORD
+declare -p LDAP_PASSWORD >> secrets.env
+
 
 
 
