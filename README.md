@@ -1,5 +1,7 @@
 # Readme
 
+The client to this server is available at https://github.com/zam-haus/door_pi
+
 0. Set your compose environment in .env (`docker compose` on Ubuntu, `docker-compose` on Debian, `podman-compose` if using Podman)
 1. Add the hostname 
    1. in .env to ALLOWED_HOSTS
@@ -47,6 +49,8 @@ The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh
 
 # Data Flows
 
+## Overview
+
 ```mermaid
 flowchart LR
     
@@ -58,6 +62,7 @@ flowchart LR
     Django -->|Rego Policies| OPA-Sidecar
     OPA-Sidecar -->|Authentication Decisions| Django
     OPA-Sidecar -->|Client Bundle Data| Django
+    OPA-Sidecar -->|LDAP Queries| Django
     LDAP -->|LDAP Data| Django
     Keycloak -->|Keycloak Data| Django
     Django -->|Open Commands| MQTT
@@ -75,3 +80,32 @@ flowchart LR
     Card -->|UID| RPi-Client
     RPi-Client -->|Control| Door
 ```
+
+## Smartphone Authentication Flow
+
+- Django reads policies and provides them to OPA sidecar
+- User authenticates
+- Keycloak provides user UUID and permission claims
+- Django saves user UUID and permission claim data to DB
+- User requests a door to open
+- Django takes door MQTT id, user UUID and permission claim data of the logged in user and sends it to OPA sidecar
+- OPA sidecar matches the permission claims against the door IDs with an internal mapping from the "app.door_commander.physical_access" policy
+- OPA sidecar returns allowed flag
+
+
+## Card Authentication Flow
+
+- Django reads policies and provides them to OPA sidecar and to OPA client
+- User authenticates
+- Keycloak provides user UUID and permission claims
+- Django saves user UUID and permission claim data to DB
+- Django provides user UUID and permissions to OPA sidecar as bundled "django" data
+- Django receives LDAP queries from OPA sidecar
+- Django executes LDAP queries and provides response data to OPA sidecar as bundled "ldap" data
+- OPA sidecar prepares OPA client data in the "app.door_commander.door_authz" policy
+- Django receives OPA client data and provides it and polcies to OPA client as a bundle
+- User presents card
+- Cardreader sends card data to door_pi client software
+- door_pi client software sends card data and door id to OPA client
+- OPA client matches the card data against the user id, the user's ldap groups and the permiited door IDs with an internal mapping from the policy
+- OPA client returns allowed flag
