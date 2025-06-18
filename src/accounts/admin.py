@@ -15,8 +15,8 @@ class UserConnectionInline(admin.StackedInline):
     model = UserConnection
     extra = 0
     can_add = False
-    fields = ('directory', 'directory_key', 'latest_directory_data', 'latest_ldap_directory_data'),
-    readonly_fields = ('latest_directory_data', 'latest_ldap_directory_data',)
+    fields = ('directory', 'directory_key', 'latest_directory_data'),
+    readonly_fields = ('latest_directory_data',)
 
 
 class UserAdmin(BaseUserAdmin):
@@ -51,11 +51,11 @@ class UserConnectionAdmin(admin.ModelAdmin):
     fieldsets = (
         (None,
          {'fields':
-              ('user', 'directory', 'directory_key', 'latest_directory_data', 'latest_ldap_directory_data')}),
+              ('user', 'directory', 'directory_key', 'latest_directory_data',)}),
     )
-    list_display = ('user', 'directory', 'directory_key', 'latest_directory_data', 'latest_ldap_directory_data')
+    list_display = ('user', 'directory', 'directory_key', 'latest_directory_data',)
     list_filter = ('directory__name',)
-    search_fields = ('user', 'directory', 'directory_key', 'latest_directory_data', 'latest_ldap_directory_data')
+    search_fields = ('user', 'directory', 'directory_key', 'latest_directory_data',)
     readonly_fields = ()
 
 
@@ -79,7 +79,7 @@ class UserDirectoryUsers(UserDirectory):
 class UserConnectionTabularInline(admin.TabularInline):
     model = UserConnection
     extra = 0
-    fields = ('user', 'directory_key', 'latest_directory_data', 'latest_ldap_directory_data')
+    fields = ('user', 'directory_key', 'latest_directory_data',)
     readonly_fields = ()
 
 

@@ -20,11 +20,13 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from icecream import ic
+from ldap3.core.exceptions import LDAPInvalidFilterError, LDAPCursorAttributeError
 
 from accounts.models import User
 from door_commander import settings
 from door_commander.opa import get_polices, get_data_result
 from doors.models import Door
+from opa_bundles.ldap import LdapQuerier
 from web_homepage.views import serialize_model
 
 log = logging.getLogger(__name__)
@@ -58,17 +60,44 @@ def _prepare_file(tar: tarfile.TarFile, include_user_data=False, include_sidecar
         log.debug(f"Delivering sidecar data as sidecar/data.json")
 
     if include_user_data:
-        users = {str(user.pk): dict(
-            user=serialize_model(user),
-            permissions=[serialize_model(p) for p in user.user_permissions.all()],
-            connections=[serialize_model(c) for c in user.connections.all()],
-        ) for user in User.objects.all()}
-        doors={str(door.pk): dict(
-            door=serialize_model(door),
-        ) for door in Door.objects.all()}
-        data = dict(users=users, doors=doors)
+        data = get_ldap_data()
+        _add_file_to_tar(tar, "ldap/data.json", BytesIO(json.dumps(data).encode("utf-8")))
+        log.debug(f"Delivering ldap data as django/data.json")
+
+        data = get_django_user_data()
         _add_file_to_tar(tar, "django/data.json", BytesIO(json.dumps(data).encode("utf-8")))
         log.debug(f"Delivering django data as django/data.json")
+
+
+def get_ldap_data():
+    ldap_query_groups = get_data_result("app/door_commander/ldap/queries", None) or dict()
+    data = dict()
+    with LdapQuerier() as ldap:
+        ldap: LdapQuerier
+        for query_group, queries in ldap_query_groups.items():
+            data[query_group] = []
+            for query in queries:
+                match query:
+                    case {"variables": variables, "attributes": attributes, "query": query_pattern}:
+                        try:
+                            result = ldap.query_ldap(query_pattern, variables, attributes)
+                            data[query_group] += result
+                        except Exception as e:
+                            log.error(f"Failed to query LDAP, delivering bundle without LDAP data: {e}, query= {query!r} % {variables} -> {attributes}")
+    return data
+
+
+def get_django_user_data():
+    users = {str(user.pk): dict(
+        user=serialize_model(user),
+        permissions=[serialize_model(p) for p in user.user_permissions.all()],
+        connections=[serialize_model(c) for c in user.connections.all()],
+    ) for user in User.objects.all()}
+    doors = {str(door.pk): dict(
+        door=serialize_model(door),
+    ) for door in Door.objects.all()}
+    data = dict(users=users, doors=doors)
+    return data
 
 
 def get_bundle(request, filename: str):
