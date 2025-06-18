@@ -59,6 +59,9 @@ door_pi --> nginx
 Django --> redis
 Django --> LDAP
 Django --> PGSQL
+Django --> Keycloak
+End-Device --> nginx
+End-Device --> Keycloak
 door_pi --> Door-Hardware
 door_pi --> OPA-Client
 ```
