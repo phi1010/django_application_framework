@@ -46,6 +46,22 @@ The bundle server is available at http://127.0.0.1:8000/opa-bundles/bundles/side
 
 The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh can be accessed via http://127.0.0.1:8182/v1/data .
 
+# Client Server Architecture
+
+```mermaid
+flowchart LR
+
+nginx --> Django
+nginx --> MQTT
+OPA-Sidecar <--> Django
+OPA-Client --> nginx
+door_pi --> nginx
+Django --> redis
+Django --> LDAP
+Django --> PGSQL
+door_pi --> Door-Hardware
+door_pi --> OPA-Client
+```
 
 # Data Flows
 
@@ -73,12 +89,12 @@ flowchart LR
     subgraph Client
     Django -->|Rego Policies| OPA-RPi-Client
     Django -->|Client Bundle Data| OPA-RPi-Client
-    MQTT -->|Open Commands| RPi-Client 
-    OPA-RPi-Client -->|Authentication Decisions| RPi-Client
+    MQTT -->|Open Commands| door_pi 
+    OPA-RPi-Client -->|Authentication Decisions| door_pi
     end
 
-    Card -->|UID| RPi-Client
-    RPi-Client -->|Control| Door
+    Card -->|UID| door_pi
+    door_pi -->|Control| Door
 ```
 
 ## Smartphone Authentication Flow
