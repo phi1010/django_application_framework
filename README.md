@@ -54,6 +54,8 @@ flowchart LR
     Django -->|LDAP Data| OPA-Sidecar 
     Django -->|Users/Keycloak Data| OPA-Sidecar
     Django <-->|Users/Keycloak Data| PGSQL
+    Server-Filesystem -->|Rego Policies| Django
+    Django -->|Rego Policies| OPA-Sidecar
     OPA-Sidecar -->|Authentication Decisions| Django
     OPA-Sidecar -->|Client Bundle Data| Django
     LDAP -->|LDAP Data| Django
@@ -64,6 +66,7 @@ flowchart LR
     Smartphone -->|Open Requests| Django
     
     subgraph Client
+    Django -->|Rego Policies| OPA-RPi-Client
     Django -->|Client Bundle Data| OPA-RPi-Client
     MQTT -->|Open Commands| RPi-Client 
     OPA-RPi-Client -->|Authentication Decisions| RPi-Client
