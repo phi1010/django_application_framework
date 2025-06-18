@@ -51,17 +51,18 @@ The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh
 ```mermaid
 flowchart LR
 
-nginx -->|Webinterface / Bundles over HTTP| Django
-nginx -->|MQTT| MQTT
+nginx-in-docker -->|Webinterface / Bundles over HTTP| Django
+nginx-in-docker -->|MQTT| MQTT
 OPA-Sidecar <--> Django
-OPA-Client -->|Bundles over HTTPS| nginx
-door_pi -->|MQTT over HTTPS| nginx
+nginx-public -->|HTTP| nginx-in-docker
+OPA-Client -->|Bundles over HTTPS| nginx-public
+door_pi -->|MQTT over HTTPS| nginx-public
 Django --> redis
 Django --> LDAP
 Django --> PGSQL
 Django --> MQTT
 Django --> Keycloak
-End-Device -->|Webinterface over HTTPS| nginx
+End-Device -->|Webinterface over HTTPS| nginx-public
 End-Device --> Keycloak
 door_pi --> Door-Hardware
 door_pi --> OPA-Client
