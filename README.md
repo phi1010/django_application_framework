@@ -43,3 +43,32 @@ Authentication for the OPA server is disabled in debug containers
 The bundle server is available at http://127.0.0.1:8000/opa-bundles/bundles/sidecar_authz.tar.gz when running debug.sh.
 
 The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh can be accessed via http://127.0.0.1:8182/v1/data .
+
+
+# Data Flows
+
+```mermaid
+flowchart LR
+    
+    subgraph Server
+    Django -->|LDAP Data| OPA-Sidecar 
+    Django -->|Users/Keycloak Data| OPA-Sidecar
+    Django <-->|Users/Keycloak Data| PGSQL
+    OPA-Sidecar -->|Authentication Decisions| Django
+    OPA-Sidecar -->|Client Bundle Data| Django
+    LDAP -->|LDAP Data| Django
+    Keycloak -->|Keycloak Data| Django
+    Django -->|Open Commands| MQTT
+    end
+    
+    Smartphone -->|Open Requests| Django
+    
+    subgraph Client
+    Django -->|Client Bundle Data| OPA-RPi-Client
+    MQTT -->|Open Commands| RPi-Client 
+    OPA-RPi-Client -->|Authentication Decisions| RPi-Client
+    end
+
+    Card -->|UID| RPi-Client
+    RPi-Client -->|Control| Door
+```
