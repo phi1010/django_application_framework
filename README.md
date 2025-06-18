@@ -59,6 +59,7 @@ door_pi --> nginx
 Django --> redis
 Django --> LDAP
 Django --> PGSQL
+Django --> MQTT
 Django --> Keycloak
 End-Device --> nginx
 End-Device --> Keycloak
