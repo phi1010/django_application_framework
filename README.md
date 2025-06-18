@@ -57,6 +57,7 @@ OPA-Sidecar <--> Django
 nginx-public -->|HTTP| nginx-in-docker
 OPA-Client -->|Bundles over HTTPS| nginx-public
 door_pi -->|MQTT over HTTPS WS| nginx-public
+ZAM-Internet-Router -->|MQTT over HTTPS WS| nginx-public
 Django --> redis
 Django --> LDAP
 Django --> PGSQL
@@ -76,6 +77,7 @@ door_pi --> OPA-Client
 flowchart LR
     
     subgraph Server
+    Router -->|IP address| Django
     Django -->|LDAP Data| OPA-Sidecar 
     Django -->|Users/Keycloak Data| OPA-Sidecar
     Django <-->|Users/Keycloak Data| PGSQL
@@ -104,12 +106,14 @@ flowchart LR
 
 ## Smartphone Authentication Flow
 
+- Router sends IP address over MQTT to Django
+- Django saves router IP address in RAM
 - Django reads policies and provides them to OPA sidecar
 - User authenticates
 - Keycloak provides user UUID and permission claims
 - Django saves user UUID and permission claim data to DB
 - User requests a door to open
-- Django takes door MQTT id, user UUID and permission claim data of the logged in user and sends it to OPA sidecar
+- Django takes door MQTT id, user UUID and permission claim data of the logged in user and the users IP address match and sends it to OPA sidecar
 - OPA sidecar matches the permission claims against the door IDs with an internal mapping from the "app.door_commander.physical_access" policy
 - OPA sidecar returns allowed flag
 
