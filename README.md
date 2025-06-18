@@ -52,11 +52,11 @@ The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh
 flowchart LR
 
 nginx-in-docker -->|Webinterface / Bundles over HTTP| Django
-nginx-in-docker -->|MQTT| MQTT
+nginx-in-docker -->|MQTT over HTTP WS| MQTT
 OPA-Sidecar <--> Django
 nginx-public -->|HTTP| nginx-in-docker
 OPA-Client -->|Bundles over HTTPS| nginx-public
-door_pi -->|MQTT over HTTPS| nginx-public
+door_pi -->|MQTT over HTTPS WS| nginx-public
 Django --> redis
 Django --> LDAP
 Django --> PGSQL
