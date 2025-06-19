@@ -122,7 +122,7 @@ def get_bundle(request, filename: str):
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
                 log.warning("Unauthorized sidecar authorization request")
                 return HttpResponse('Unauthorized', status=401)
-            fd = _make_tarfile(_prepare_file, include_user_data=True)  # TODO include more data
+            fd = _make_tarfile(_prepare_file, include_user_data=True)
             return _make_file_download_response(fd, download_filename)
 
         case _:
