@@ -231,6 +231,10 @@ def wait_until(condition, interval=0.1, timeout=1, *args):
 def update_mqtt_dynamic_security():
     for rclient in RemoteClient.objects.all():
         update_mqtt_client(rclient)
+    cleanup_all_clients_and_roles()
+
+
+def cleanup_all_clients_and_roles():
     allowed_usernames = [rclient.username for rclient in RemoteClient.objects.all()] \
                         + ["controller"]
     allowed_rolenames = [door.mqtt_id for door in Door.objects.all()] \
