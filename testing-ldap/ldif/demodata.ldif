@@ -1,0 +1,52 @@
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+dn: uid=jdoe,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: John Doe
+sn: Doe
+uid: jdoe
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/jdoe
+loginShell: /bin/bash
+mail: jdoe@example.org
+userPassword: secret123
+displayName: John Doe
+telephoneNumber: +1 555 123 4567
+employeeNumber: 12345
+description: Demo user John Doe
+
+dn: uid=asmith,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Audrey Smith
+sn: Smith
+uid: asmith
+uidNumber: 1001
+gidNumber: 1000
+homeDirectory: /home/asmith
+loginShell: /bin/bash
+mail: asmith@example.org
+userPassword: secret456
+displayName: Audrey Smith
+telephoneNumber: +1 555 987 6543
+employeeNumber: 12346
+description: Demo user Audrey Smith
+
+dn: cn=users,ou=users,dc=example,dc=org
+objectClass: posixGroup
+cn: users
+gidNumber: 1000
+memberUid: jdoe
+memberUid: asmith
+
+dn: cn=admins,ou=users,dc=example,dc=org
+objectClass: groupOfNames
+cn: admins
+member: uid=jdoe,ou=users,dc=example,dc=org
+description: Admin group with John Doe as member

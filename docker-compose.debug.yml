@@ -35,6 +35,7 @@ services:
     command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
     volumes:
       - opa-client-prototype-persistence:/var/opa/
+
   # An OPA client configured similar to how it could run on an rpi.
   opa-client-prototype:
     command: run --server --addr :8181  --authentication=token --authorization=basic -c /data/config.yaml
@@ -60,7 +61,19 @@ services:
   test:
     image: ubuntu
 
-
+  openldap:
+    build: ./testing-ldap
+    ports:
+      - "389:389"
+      - "636:636"
+    environment:
+      LDAP_ORGANISATION: "Example Org"
+      LDAP_DOMAIN: "example.org"
+      # Bind to cn=admin,dc=example,dc=org
+      LDAP_ADMIN_PASSWORD: "${LDAP_PASSWORD}"
+    volumes:
+      - ldap-data:/var/lib/ldap
+      - ldap-config:/etc/ldap/slapd.d
 
   nginx:
     ports:
@@ -68,3 +81,5 @@ services:
 
 volumes:
   opa-client-prototype-persistence:
+  ldap-data:
+  ldap-config:

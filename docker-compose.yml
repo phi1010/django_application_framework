@@ -50,6 +50,10 @@ services:
       OPA_URL: "http://opa:8181/"
       OPA_BUNDLE_DIRECTORY: "/data/opa-bundle"
       ALLOWED_HOSTS:
+      LDAP_BASE_DN:
+      LDAP_BIND_DN:
+      LDAP_PASSWORD:
+      LDAP_URL:
       OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
       OIDC_RP_SIGN_ALGO:
