@@ -42,5 +42,5 @@ class RemoteClient(models.Model):
     # The OPA bundle server bearer token or the MQTT password
     token = encrypted_fields.EncryptedCharField(max_length=256)
 
-    doors = models.ManyToManyField(Door, related_name='remote_clients')
+    doors = models.ManyToManyField(Door, related_name='remote_clients', blank=True)
     "The list of doors that this client is allowed to update on MQTT"
