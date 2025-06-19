@@ -1,80 +1,3 @@
-# "$CONTROL/dynamic-security/v1/response
-"""
-[
-{
-  "responses": [
-    {
-      "command": "getRole",
-      "data": {
-        "role": {
-          "rolename": "admin",
-          "acls": [
-            {
-              "acltype": "publishClientSend",
-              "topic": "$CONTROL/dynamic-security/#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "publishClientSend",
-              "topic": "#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "publishClientReceive",
-              "topic": "$CONTROL/dynamic-security/#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "publishClientReceive",
-              "topic": "$SYS/#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "publishClientReceive",
-              "topic": "#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "subscribePattern",
-              "topic": "$CONTROL/dynamic-security/#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "subscribePattern",
-              "topic": "$SYS/#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "subscribePattern",
-              "topic": "#",
-              "priority": 0,
-              "allow": true
-            },
-            {
-              "acltype": "unsubscribePattern",
-              "topic": "#",
-              "priority": 0,
-              "allow": true
-            }
-          ]
-        }
-      }
-    }
-  ]
-},
-{"responses":[{"command":"listRoles","data":{"totalCount":1,"roles":["admin"]}}]}
-
-
-]
-"""
-
 import json
 import threading
 import time
@@ -89,10 +12,13 @@ from django.utils.functional import lazy
 from icecream import ic
 from paho.mqtt.client import MQTTMessage
 from pymaybe import maybe
+from doors.models import Door, RemoteClient
 
 from django.conf import settings
 from doors.models import Door
 import lazy_object_proxy
+
+CV_WAIT_TIMEOUT = 10
 
 MQTT_CLIENT_KWARGS = settings.MQTT_CLIENT_KWARGS
 MQTT_SERVER_KWARGS = settings.MQTT_SERVER_KWARGS
@@ -100,13 +26,6 @@ MQTT_PASSWORD_AUTH = settings.MQTT_PASSWORD_AUTH
 MQTT_TLS = settings.MQTT_TLS
 
 log = logging.getLogger(__name__)
-
-
-@dataclass
-class SetUserTask:
-    username: str
-    password: str
-    roles: list[str]
 
 
 @dataclass
@@ -123,13 +42,6 @@ class DynSecAcl:
     allow: bool = field(default=True)
 
 
-@dataclass
-class SetRolesTask:
-    username: str
-    password: str
-    acls: list[DynSecAcl]
-
-
 def prepare_acls(mqtt_id) -> list[DynSecAcl]:
     return [
         DynSecAcl(acltype="subscribePattern", topic=pack_topic("door/+/", mqtt_id) + "#", ),
@@ -143,6 +55,7 @@ class MqttAdminEndpoint(GenericMqttEndpoint):
     def __init__(self, client_kwargs: dict, password_auth: dict, server_kwargs: dict, tls: bool):
         super().__init__(client_kwargs, password_auth, server_kwargs, tls)
         self._cv = threading.Condition()
+        self.last_responses = None
 
     @property
     def is_connected(self):
@@ -150,16 +63,19 @@ class MqttAdminEndpoint(GenericMqttEndpoint):
         return self._mqttc.is_connected()
 
     @GenericMqttEndpoint.subscribe_decorator("$CONTROL/dynamic-security/v1/response", qos=2)
-    def admin_response(self, *, client, userdata, message: MQTTMessage):
+    def dynsec_response_callback(self, *, client, userdata, message: MQTTMessage):
         try:
+            log.debug(f"Received response, waiting for lock...")
             with self._cv:
+                log.debug("Lock acquired")
                 # ic(message)
                 # ic(message.payload)
                 data = loads(message.payload)
                 match data:
                     case {"responses": commands}:
+                        self.last_responses = commands
+                        self._cv.notify_all()
                         for command in commands:
-                            self._cv.notify_all()
                             match command:
                                 case {"command": command_name, "error": error}:
                                     log.warning(f"Error executing command {command_name!r}: {error!r}")
@@ -170,51 +86,136 @@ class MqttAdminEndpoint(GenericMqttEndpoint):
         except Exception as e:
             log.error(f"Failed to parse message: {e}")
 
-    def set_client(self, username, password, allow_mqtt_ids, sync=False):
-        if not wait_until(lambda :self.is_connected, timeout=5):
+    def set_client(self, username, password, allow_mqtt_ids):
+        if not wait_until(lambda: self.is_connected, timeout=5):
             raise Exception("Not connected to MQTT server")
 
+        payload = dict(
+            commands=
+            [
+                dict(
+                    command="createRole",
+                    rolename=mqtt_id,
+                    textname=mqtt_id,
+                    acls=[acl.__dict__ for acl in prepare_acls(mqtt_id)]
+                )
+                for mqtt_id in allow_mqtt_ids
+            ] + [
+                dict(
+                    command="modifyRole",
+                    rolename=mqtt_id,
+                    textname=mqtt_id,
+                    acls=[acl.__dict__ for acl in prepare_acls(mqtt_id)]
+                )
+                for mqtt_id in allow_mqtt_ids
+            ] + [
+                dict(
+                    command="createClient",
+                    username=username,
+                    password=password,
+                    textname=username,
+                    roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
+                ),
+                dict(
+                    command="modifyClient",
+                    username=username,
+                    password=password,
+                    textname=username,
+                    roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
+                ),
+            ])
+        self.tranceive_request(payload)
+
+    def cleanup_clients(self, allowed_usernames, allowed_mqtt_ids):
+        if not wait_until(lambda: self.is_connected, timeout=5):
+            raise Exception("Not connected to MQTT server")
+
+        allowed_usernames = set(allowed_usernames)
+        allowed_mqtt_ids = set(allowed_mqtt_ids)
+
+        client_usernames, role_names = self.get_clients_and_roles()
+        surplus_role_names = role_names.difference(allowed_mqtt_ids)
+        surplus_client_usernames = client_usernames.difference(allowed_usernames)
+        if surplus_role_names:
+            log.info(f"Cleaning up roles: {surplus_role_names}")
+            for surplus_role_name in surplus_role_names:
+                self.remove_role(surplus_role_name)
+        if surplus_client_usernames:
+            log.info(f"Cleaning up clients: {surplus_client_usernames}")
+            for surplus_client_username in surplus_client_usernames:
+                self.remove_client(surplus_client_username)
+
+    def get_clients_and_roles(self):
+
+        payload = dict(
+            commands=
+            [
+                dict(
+                    command="listClients",
+                    verbose=False,
+                    count=-1,  # All
+                    offset=0,
+                ),
+                dict(
+                    command="listRoles",
+                    verbose=False,
+                    count=-1,  # All
+                    offset=0,
+                ),
+            ]
+        )
+        last_responses = self.tranceive_request(payload)
+
+        client_usernames = set()
+        role_names = set()
+
+        for command in last_responses:
+            match command:
+                case {"command": "listClients", "data": {"clients": client_usernames, "totalCount": _}}:
+                    client_usernames = set(client_usernames)
+                    # ic(client_usernames)
+
+        for command in last_responses:
+            match command:
+                case {"command": "listRoles", "data": {"roles": role_names, "totalCount": _}}:
+                    role_names = set(role_names)
+                    # ic(role_names)
+
+        return client_usernames, role_names
+
+    def remove_client(self, username):
         with self._cv:
             payload = dict(
                 commands=
                 [
                     dict(
-                        command="createRole",
-                        rolename=mqtt_id,
-                        textname=mqtt_id,
-                        acls=[acl.__dict__ for acl in prepare_acls(mqtt_id)]
-                    )
-                    for mqtt_id in allow_mqtt_ids
-                ] + [
-                    dict(
-                        command="modifyRole",
-                        rolename=mqtt_id,
-                        textname=mqtt_id,
-                        acls=[acl.__dict__ for acl in prepare_acls(mqtt_id)]
-                    )
-                    for mqtt_id in allow_mqtt_ids
-                ]+[
-                    dict(
-                        command="createClient",
+                        command="deleteClient",
                         username=username,
-                        password=password,
-                        textname=username,
-                        roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
-                    ),
-                    dict(
-                        command="modifyClient",
-                        username=username,
-                        password=password,
-                        textname=username,
-                        roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
-                    ),
-                ])
-            pub = self._mqttc.publish("$CONTROL/dynamic-security/v1", qos=2, retain=False, payload=json.dumps(payload))
-            #pub.wait_for_publish()
-            if sync:
-                if not self._cv.wait(5):
-                    raise Exception("Timed out waiting for MQTT response")
+                    )
+                ]
+            )
+            self.tranceive_request(payload)
 
+    def remove_role(self, rolename):
+        payload = dict(
+            commands=
+            [
+                dict(
+                    command="deleteRole",
+                    rolename=rolename,
+                )
+            ]
+        )
+        self.tranceive_request(payload)
+
+    def tranceive_request(self, payload):
+        with self._cv:
+            pub = self._mqttc.publish("$CONTROL/dynamic-security/v1", qos=2, retain=False, payload=json.dumps(payload))
+            # pub.wait_for_publish()
+            log.debug(f"Waiting for response...")
+            if not self._cv.wait(CV_WAIT_TIMEOUT):
+                raise Exception("Timed out waiting for MQTT response. Was the message to large?")
+            return self.last_responses
 
 
 def start_connection():
@@ -234,7 +235,25 @@ admin_mqtt: MqttAdminEndpoint = lazy_object_proxy.Proxy(start_connection)
 
 def wait_until(condition, interval=0.1, timeout=1, *args):
     start = time.time()
-    while not (result:=condition(*args)) and time.time() - start < timeout:
+    while not (result := condition(*args)) and time.time() - start < timeout:
         time.sleep(interval)
     # True if condition fulfilled
     return result
+
+
+def update_mqtt_dynamic_security():
+    for rclient in RemoteClient.objects.all():
+        update_mqtt_client(rclient)
+    allowed_usernames = [rclient.username for rclient in RemoteClient.objects.all()] \
+                        + ["controller"]
+    allowed_rolenames = [door.mqtt_id for door in Door.objects.all()] \
+                        + ["admin"]
+    admin_mqtt.cleanup_clients(allowed_usernames=allowed_usernames, allowed_mqtt_ids=allowed_rolenames)
+
+
+def update_mqtt_client(rclient):
+    log.info(f"updating mqtt client {rclient.id!r}")
+    pub = admin_mqtt.set_client(
+        username=rclient.username, password=rclient.token,
+        allow_mqtt_ids=[door.mqtt_id for door in rclient.doors.all()],
+    )

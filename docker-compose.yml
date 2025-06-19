@@ -10,7 +10,8 @@ services:
     volumes:
       - door-commander-mosquitto-log:/mosquitto/log
       - door-commander-mosquitto-data:/mosquitto/data
-      - ./mosquitto/config/:/mosquitto/config/
+      - ./mosquitto/config/:/mosquitto/config/:ro
+      - door-commander-mosquitto-dynconfig:/mosquitto/dyn-config/
     networks:
       - web
       - mqtt
@@ -210,3 +211,4 @@ volumes:
   door-commander-mosquitto-log:
   celery-beat-schedule:
   opa-persistence:
+  door-commander-mosquitto-dynconfig:

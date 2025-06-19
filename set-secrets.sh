@@ -26,7 +26,8 @@ if [[ ! $MQTT_PASSWD_CONTROLLER ]] ; then
   declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
 fi
 echo "Remove mosquitto/config/dynamic-security.json if you want to reset the admin password to the one written in secrets.env"
-$COMPOSE run --rm mqtt mosquitto_ctrl dynsec init /mosquitto/config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
+$COMPOSE run --rm mqtt mosquitto_ctrl dynsec init /mosquitto/dyn-config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
+echo "Allowing controller to publish messages to normal topics..."
 ./mqtt-dynsec.sh addroleacl admin publishClientSend '#' allow 0 || true
 echo ::endgroup::
 
@@ -99,11 +100,12 @@ if [[ ! $OIDC_RP_CLIENT_SECRET ]] ; then
   declare -p OIDC_RP_CLIENT_SECRET >> secrets.env
 fi
 
-echo "TODO: You need to provide LDAP_PASSWORD manually."
-LDAP_PASSWORD="password"
-export LDAP_PASSWORD
-declare -p LDAP_PASSWORD >> secrets.env
-
+if [[ ! $LDAP_PASSWORD ]] ; then
+  echo "TODO: You need to provide LDAP_PASSWORD manually."
+  LDAP_PASSWORD="password"
+  export LDAP_PASSWORD
+  declare -p LDAP_PASSWORD >> secrets.env
+fi
 
 
 
