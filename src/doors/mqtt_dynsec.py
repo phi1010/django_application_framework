@@ -90,11 +90,13 @@ class MqttAdminEndpoint(GenericMqttEndpoint):
         if not wait_until(lambda: self.is_connected, timeout=5):
             raise Exception("Not connected to MQTT server")
 
+        usernames, roles = self.get_clients_and_roles()
+
         payload = dict(
             commands=
             [
                 dict(
-                    command="createRole",
+                    command="createRole" if mqtt_id not in roles else "modifyRole",
                     rolename=mqtt_id,
                     textname=mqtt_id,
                     acls=[acl.__dict__ for acl in prepare_acls(mqtt_id)]
@@ -102,27 +104,12 @@ class MqttAdminEndpoint(GenericMqttEndpoint):
                 for mqtt_id in allow_mqtt_ids
             ] + [
                 dict(
-                    command="modifyRole",
-                    rolename=mqtt_id,
-                    textname=mqtt_id,
-                    acls=[acl.__dict__ for acl in prepare_acls(mqtt_id)]
+                    command="createClient" if username not in usernames else "modifyClient",
+                    username=username,
+                    password=password,
+                    textname=username,
+                    roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
                 )
-                for mqtt_id in allow_mqtt_ids
-            ] + [
-                dict(
-                    command="createClient",
-                    username=username,
-                    password=password,
-                    textname=username,
-                    roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
-                ),
-                dict(
-                    command="modifyClient",
-                    username=username,
-                    password=password,
-                    textname=username,
-                    roles=[dict(rolename=mqtt_id, priority=0) for mqtt_id in allow_mqtt_ids],
-                ),
             ])
         self.tranceive_request(payload)
 
