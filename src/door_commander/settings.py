@@ -447,6 +447,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "doors.tasks.publish_door_names",
         "schedule": crontab(minute="*/15"),
     },
+    "update_mqtt_dynsec": {
+        "task": "doors.tasks.update_mqtt_dynsec",
+        "schedule": crontab(minute="*/15"),
+    },
 }
 
 # ================================================================
