@@ -46,6 +46,10 @@ The bundle server is available at http://127.0.0.1:8000/opa-bundles/bundles/side
 
 The RPi OPA Instance started with ./debug-opa-client.sh while running ./debug.sh can be accessed via http://127.0.0.1:8182/v1/data .
 
+# MQTT data spec
+
+The MQTT data spec is available at [mqtt.md](mqtt.md).
+
 # Client Server Architecture
 
 ```mermaid
