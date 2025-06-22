@@ -1,3 +1,4 @@
+import hashlib
 import ipaddress
 import json
 import logging
@@ -34,43 +35,6 @@ from doors.models import RemoteClient
 log = logging.getLogger(__name__)
 
 
-def _prepare_file(tar: tarfile.TarFile, include_user_data=False, include_sidecar_data=False):
-    """
-    :param tar:
-    :param include_user_data: True if data of django users should be included in this file
-    :param include_sidecar_data: True if data from OPA sidecar should be included in this file
-    :return:
-    """
-    path = Path(settings.OPA_BUNDLE_DIRECTORY)
-    if not path.exists():
-        raise Exception('Bundle directory does not exist')
-
-    for file in path.glob("**/*.rego"):
-        log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
-        # For rego files, only the package declaration in the file is used.
-        _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
-
-    for file in path.glob("**/*.json"):
-        log.debug(f"Delivering {file} as {os.path.relpath(str(file), path)}")
-        # Only the filename data.json is accepted when loading the data file,
-        # only the directories are used for the location in the data tree
-        _add_file_to_tar(tar, os.path.relpath(str(file), path), open(file, "rb"))
-
-    if include_sidecar_data:
-        data = get_data_result("app/door_commander/door_authz", None)
-        _add_file_to_tar(tar, "sidecar/data.json", BytesIO(json.dumps(data).encode("utf-8")))
-        log.debug(f"Delivering sidecar data as sidecar/data.json")
-
-    if include_user_data:
-        data = get_ldap_data()
-        _add_file_to_tar(tar, "ldap/data.json", BytesIO(json.dumps(data).encode("utf-8")))
-        log.debug(f"Delivering ldap data as django/data.json")
-
-        data = get_django_user_data()
-        _add_file_to_tar(tar, "django/data.json", BytesIO(json.dumps(data).encode("utf-8")))
-        log.debug(f"Delivering django data as django/data.json")
-
-
 def get_ldap_data():
     ldap_query_groups = get_data_result("app/door_commander/ldap/queries", None) or dict()
     data = dict()
@@ -85,7 +49,8 @@ def get_ldap_data():
                             result = ldap.query_ldap(query_pattern, variables, attributes)
                             data[query_group] += result
                         except Exception as e:
-                            log.error(f"Failed to query LDAP, delivering bundle without LDAP data: {e}, query= {query!r} % {variables} -> {attributes}")
+                            log.error(
+                                f"Failed to query LDAP, delivering bundle without LDAP data: {e}, query= {query!r} % {variables} -> {attributes}")
     return data
 
 
@@ -113,8 +78,17 @@ def get_bundle(request, filename: str):
 
         case "door_authz.tar.gz":
             # fd = open(path_to_file, 'rb')
-            fd = _make_tarfile(_prepare_file, include_sidecar_data=True)
-            return _make_file_download_response(fd, download_filename)
+            hashes = dict()
+            with InMemoryTarFile() as tar_file:
+                tar = tar_file.tar
+                _add_policies_and_data_to_bundle(hashes, tar)
+
+                data = get_data_result("app/door_commander/door_authz", None)
+                relpath = "sidecar/data.json"
+                _add_json_to_bundle(data, hashes, relpath, tar)
+
+            response = get_download_or_not_modified(download_filename, tar_file.fd, hashes, request)
+            return response
 
         case "sidecar_authz.tar.gz":
             # ic(authorization)
@@ -122,26 +96,86 @@ def get_bundle(request, filename: str):
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
                 log.warning("Unauthorized sidecar authorization request")
                 return HttpResponse('Unauthorized', status=401)
-            fd = _make_tarfile(_prepare_file, include_user_data=True)
-            return _make_file_download_response(fd, download_filename)
+            hashes = dict()
+            with InMemoryTarFile() as tar_file:
+                tar = tar_file.tar
+                _add_policies_and_data_to_bundle(hashes, tar)
+
+                data = get_ldap_data()
+                relpath = "ldap/data.json"
+                _add_json_to_bundle(data, hashes, relpath, tar)
+
+                data = get_django_user_data()
+                relpath = "django/data.json"
+                _add_json_to_bundle(data, hashes, relpath, tar)
+
+            response = get_download_or_not_modified(download_filename, tar_file.fd, hashes, request)
+            return response
 
         case _:
             return HttpResponseNotFound()
     # return redirect("https://betreiberverein.de/impressum/")
 
 
-def _make_tarfile(prepare_file, **kwargs):
-    fd = io.BytesIO(b"")
-    tar = tarfile.open(name=None, mode='w:gz', fileobj=fd)
-    prepare_file(tar, **kwargs)
-    tar.close()
-    # ic(fd, fd.tell())
-    # Seek to the start of the written tarfile
+def _add_json_to_bundle(data, hashes, relpath, tar):
+    _add_file_to_tar(tar, relpath, BytesIO(json.dumps(data).encode("utf-8")))
+    hash = hashlib.sha256(json.dumps(data).encode('utf-8')).hexdigest()
+    hashes[relpath] = hash
+    log.debug(f"Delivering {relpath}, hash={hash}")
+
+
+def _add_policies_and_data_to_bundle(hashes, tar):
+    path = Path(settings.OPA_BUNDLE_DIRECTORY)
+    if not path.exists():
+        raise Exception('Bundle directory does not exist')
+    for file in path.glob("**/*.rego"):
+        _add_file_to_tar_and_hash(file, hashes, path, tar)
+    for file in path.glob("**/*.json"):
+        _add_file_to_tar_and_hash(file, hashes, path, tar)
+
+
+def _add_file_to_tar_and_hash(file, hashes, path, tar):
+    fd = open(file, 'rb')
+    hash = hashlib.sha256(fd.read()).hexdigest()
     fd.seek(0)
-    return fd
+    relpath = os.path.relpath(str(file), path)
+    log.debug(
+        f"Delivering {file} as {relpath}, hash={hash}")
+    # For rego files, only the package declaration in the file is used.
+    _add_file_to_tar(tar, relpath, fd)
+    hashes[relpath] = hash
 
 
-def _make_file_download_response(fd, file_name):
+def get_download_or_not_modified(download_filename, fd, content_hashes, request):
+    # Generate an ETAG with sha256 hash of the file content
+    etag = hashlib.sha256(json.dumps(content_hashes).encode("utf-8")).hexdigest()
+    etag = "W/"+json.dumps(etag)
+    request_etag = request.headers.get("If-None-Match")
+    if request_etag == etag:
+        log.debug(f"ETag {etag} matches, returning 304 Not Modified")
+        response = HttpResponse(status=304)
+    else:
+        response = _make_file_download_response(fd, download_filename)
+        response['ETag'] = etag
+    return response
+
+
+class InMemoryTarFile:
+    def __init__(self):
+        self.fd = io.BytesIO(b"")
+        self.tar = tarfile.open(name=None, mode='w:gz', fileobj=self.fd)
+
+    def __enter__(self) -> 'InMemoryTarFile':
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.tar.close()
+        # ic(fd, fd.tell())
+        # Seek to the start of the written tarfile
+        self.fd.seek(0)
+
+
+def _make_file_download_response(fd, file_name, etag=None) -> FileResponse:
     response = FileResponse(fd)
     response['Content-Disposition'] = 'inline; filename=' + file_name
     return response
