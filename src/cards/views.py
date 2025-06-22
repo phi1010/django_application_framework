@@ -11,8 +11,7 @@ def home(request):
     messages.success(request, "Profile details updated.")
     messages.warning(request, "Your account expires in three days.")
     messages.error(request, "Document deleted.")
-    return render(request, 'cards/index.html', {
-        'title': 'Cards',
-        'site_title': 'ZAM Door',
-        'site_header': 'ZAM Door Commander',
-    })
+    context = dict(title='Cards', site_title='ZAM Door', site_header='ZAM Door Commander',
+                   messages=messages.get_messages(request),
+                   )
+    return render(request, 'cards/index.html', context)
