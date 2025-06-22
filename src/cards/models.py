@@ -2,6 +2,9 @@ import uuid
 
 from django.db import models
 
+from accounts.models import User
+from door_commander import settings
+
 
 class Card(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -10,6 +13,7 @@ class Card(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="cards", help_text="This refers to a user who owns this card", null=True, blank=True)
 
     def __str__(self):
         return self.name
