@@ -22,6 +22,7 @@ from graphene_django.views import GraphQLView
 
 urlpatterns = [
     path('', include('web_homepage.urls')),
+    path('cards/', include('cards.urls')),
     # <LEGACY>
     # delete this in future
     # path('clientipaddress/', include('cliaentipaddress.urls')),
