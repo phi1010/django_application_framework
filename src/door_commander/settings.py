@@ -451,13 +451,14 @@ CELERY_BEAT_SCHEDULE = {
         "task": "doors.tasks.update_mqtt_dynsec",
         "schedule": crontab(minute="*/15"),
     },
-}
+} if DEBUG else {}
 
 # ================================================================
 # Our own functional apps
 # ================================================================
 
 INSTALLED_APPS += [
+    'cards',
     'doors',
     'accounts',
     'api',
