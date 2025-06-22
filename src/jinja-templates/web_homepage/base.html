@@ -46,6 +46,16 @@
                 <a class="navbar-item" href="/">
                     Home
                 </a>
+                {% if request.user.is_authenticated %}
+                    <a class="navbar-item" href="{{ url('cards-home') }}">
+                            Kartenverwaltung
+                        </a>
+                    {% if request.user.is_staff %}
+                        <a class="navbar-item" href="{{ url('admin:index') }}">
+                            Administration
+                        </a>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
     </nav>

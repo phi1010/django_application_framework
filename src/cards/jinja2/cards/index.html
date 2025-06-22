@@ -11,7 +11,9 @@
         </section>
         <section class="section">
             <div class="grid is-col-min-14">
-                {% for n in range(1,4+1) %}
+                {% for card in cards %}
+                    {% set n = loop.index %}
+                    {% set locked = card.disabled %}
                     <div class="cell">
                         <div class="card">
                             {#
@@ -28,29 +30,26 @@
                                              width="48px">
                                     </div>
                                     <div class="media-content">
-                                        <p class="title is-4">Card {{ n }}</p>
-                                        {# <p class="subtitle is-6">Created: YYYY-DD-MM</p> #}
+                                        <p class="title is-4">Karte {{ n }}</p>
+                                        {% if locked %} <p class="subtitle is-6">Karte gesperrt!</p> {% endif %}
                                     </div>
                                 </div>
 
                                 <div class="content">
-                                    <div>Karte registriert: YYYY-MM-DD</div>
-                                    <div>Karte zuletzt verwendet: YYYY-MM-DD</div>
-                                    {% set locked = n % 3 == 0 %}
-                                    {% if locked %}
-                                        <div>Diese Karte ist gesperrt!</div>
-                                    {% endif %}
+                                    <div>ID: {{ card.id }}</div>
+                                    <div>Karte registriert: {{ card.created_at.strftime("%Y-%m-%d") }}</div>
+                                    <div>Karte zuletzt verwendet: {{ card.last_used_at.strftime("%Y-%m-%d %H:%M") if card.last_used_at else "Noch nicht verwendet" }}</div>
                                     <hr/>
 
-                                    <form method="post" action="./delete/12345">
+                                    <form method="post" action="{{ url('cards-modify', kwargs={'card_id': card.id}) }}">
                                         {{ csrf_input }}
-                                        <button type="submit" class="button is-danger">
+                                        <button type="submit" class="button is-danger" name="action" value="delete">
                                             Karte löschen
                                         </button>
                                         {% if not locked %}
-                                        <button type="submit" class="button is-warning">
-                                            Karte sperren
-                                        </button>
+                                            <button type="submit" class="button is-warning" name="action" value="disable">
+                                                Karte sperren
+                                            </button>
                                         {% endif %}
                                     </form>
                                 </div>

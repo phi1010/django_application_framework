@@ -22,10 +22,6 @@ class RemoteClientForm(ModelForm):
     class Meta:
         model = RemoteClient
         fields = "__all__"
-        widgets = {
-            "text_color": TextInput(attrs={"type": "color"}),
-            "button_color": TextInput(attrs={"type": "color"}),
-        }
 
 
 @admin.register(Door)
