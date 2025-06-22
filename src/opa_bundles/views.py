@@ -28,6 +28,8 @@ from door_commander.opa import get_polices, get_data_result
 from doors.models import Door
 from opa_bundles.ldap import LdapQuerier
 from web_homepage.views import serialize_model
+from door_commander.opa import get_polices
+from doors.models import RemoteClient
 
 log = logging.getLogger(__name__)
 
@@ -120,7 +122,7 @@ def get_bundle(request, filename: str):
             if not isinstance(authorization, OpaSidecarTokenAuthorization):
                 log.warning("Unauthorized sidecar authorization request")
                 return HttpResponse('Unauthorized', status=401)
-            fd = _make_tarfile(_prepare_file, include_user_data=True)  # TODO include more data
+            fd = _make_tarfile(_prepare_file, include_user_data=True)
             return _make_file_download_response(fd, download_filename)
 
         case _:
@@ -216,7 +218,12 @@ def _authorize_with_bearer(request: WSGIRequest):
         case settings.OPA_BEARER_TOKEN:
             authorized = OpaSidecarTokenAuthorization()
         case _:
-            authorized = None
+            # don't use get(token=...) since that doesn't work for encrypted fields.
+            # TODO split from username:token for efficiency
+            if any(x for x in RemoteClient.objects.all() if x.token == token):
+                authorized = OpaClientTokenAuthorization()
+            else:
+                authorized = None
     log.debug(
         f"Request from {request.META['REMOTE_ADDR']} to OPA bundles / decision log API was authorized as {authorized}")
     return authorized

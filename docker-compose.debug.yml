@@ -8,6 +8,7 @@ services:
   mqtt:
     ports:
       - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+      - "127.0.0.1:1883:1883"
 
   db:
     ports:

@@ -24,10 +24,11 @@ if [[ ! $MQTT_PASSWD_CONTROLLER ]] ; then
   MQTT_PASSWD_CONTROLLER="$(generate_password)"
   export MQTT_PASSWD_CONTROLLER
   declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
-  echo "Check mosquitto/config/mosquitto.passwd for duplicates!"
-  touch mosquitto/config/mosquitto.passwd || true # otherwise a directory will be created
 fi
-$COMPOSE run --rm mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
+echo "Remove mosquitto/config/dynamic-security.json if you want to reset the admin password to the one written in secrets.env"
+$COMPOSE run --rm mqtt mosquitto_ctrl dynsec init /mosquitto/dyn-config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
+echo "Allowing controller to publish messages to normal topics..."
+./mqtt-dynsec.sh addroleacl admin publishClientSend '#' allow 0 || true
 echo ::endgroup::
 
 
@@ -56,6 +57,22 @@ echo ::endgroup::
 
 
 
+echo ::group::Django Secret
+if [[ ! $DJANGO_SECRET ]] ; then
+  DJANGO_SECRET="$(generate_password)"
+  export DJANGO_SECRET
+  declare -p DJANGO_SECRET >>secrets.env
+fi
+echo ::endgroup::
+
+echo ::group::Django Encrypted Fields Salt
+if [[ ! $DJANGO_SALT ]] ; then
+  DJANGO_SALT="$(generate_password)"
+  export DJANGO_SALT
+  declare -p DJANGO_SALT >>secrets.env
+fi
+echo ::endgroup::
+
 echo ::group::OPA Bearer Token
 if [[ ! $OPA_BEARER_TOKEN ]] ; then
   echo "Token used to connect the Django OPA client to the internal OPA server instance"
@@ -83,11 +100,12 @@ if [[ ! $OIDC_RP_CLIENT_SECRET ]] ; then
   declare -p OIDC_RP_CLIENT_SECRET >> secrets.env
 fi
 
-echo "TODO: You need to provide LDAP_PASSWORD manually."
-LDAP_PASSWORD="password"
-export LDAP_PASSWORD
-declare -p LDAP_PASSWORD >> secrets.env
-
+if [[ ! $LDAP_PASSWORD ]] ; then
+  echo "TODO: You need to provide LDAP_PASSWORD manually."
+  LDAP_PASSWORD="password"
+  export LDAP_PASSWORD
+  declare -p LDAP_PASSWORD >> secrets.env
+fi
 
 
 

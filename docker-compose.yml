@@ -10,9 +10,8 @@ services:
     volumes:
       - door-commander-mosquitto-log:/mosquitto/log
       - door-commander-mosquitto-data:/mosquitto/data
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./mosquitto/config/mosquitto.acl:/mosquitto/config/mosquitto.acl:ro
-      - ./mosquitto/config/mosquitto.passwd:/mosquitto/config/mosquitto.passwd
+      - ./mosquitto/config/:/mosquitto/config/:ro
+      - door-commander-mosquitto-dynconfig:/mosquitto/dyn-config/
     networks:
       - web
       - mqtt
@@ -65,6 +64,8 @@ services:
       OIDC_OP_AUTHORIZATION_ENDPOINT:
       OIDC_OP_TOKEN_ENDPOINT:
       OPA_BUNDLE_SERVER_BEARER_TOKEN:
+      DJANGO_SECRET:
+      DJANGO_SALT:
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD_DJANGO}'
       POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
       POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
@@ -112,7 +113,6 @@ services:
         PYTHON_VERSION: "3.13"
     #image: python_image
     volumes:
-      - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
       - "./opa/policy:/data/opa-bundle:ro"
     networks:
       - db
@@ -206,9 +206,9 @@ networks:
   opa: #
 
 volumes:
-  door-commander-python-data:
   door-commander-postgres:
   door-commander-mosquitto-data:
   door-commander-mosquitto-log:
   celery-beat-schedule:
   opa-persistence:
+  door-commander-mosquitto-dynconfig:
