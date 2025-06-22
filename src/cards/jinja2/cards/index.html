@@ -36,13 +36,22 @@
                                 <div class="content">
                                     <div>Karte registriert: YYYY-MM-DD</div>
                                     <div>Karte zuletzt verwendet: YYYY-MM-DD</div>
+                                    {% set locked = n % 3 == 0 %}
+                                    {% if locked %}
+                                        <div>Diese Karte ist gesperrt!</div>
+                                    {% endif %}
                                     <hr/>
 
-                                    <form method="post" action="/delete">
-                                        <input type="hidden" name="id" value="12345">
+                                    <form method="post" action="./delete/12345">
+                                        {{ csrf_input }}
                                         <button type="submit" class="button is-danger">
                                             Karte löschen
                                         </button>
+                                        {% if not locked %}
+                                        <button type="submit" class="button is-warning">
+                                            Karte sperren
+                                        </button>
+                                        {% endif %}
                                     </form>
                                 </div>
 
@@ -61,16 +70,49 @@
                                 </div>
                                 <div class="media-content">
                                     <p class="title is-4">Neue Karte hinzufügen</p>
+                                    <p class="subtitle is-6">oder eigene gesperrte Karte entsperren</p>
+                                </div>
+                            </div>
+
+                            <div class="content">
+                                <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den
+                                    Button:
+                                </div>
+                                <hr/>
+                                <form method="post" action="./register">
+                                    <button type="submit" class="button is-warning">
+                                        Karte registrieren
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="cell">
+
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <img src="{{ static('cards/fa6-regular--id-card.svg') }}" height="48px"
+                                         width="48px">
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4">Gefundene Karte sperren</p>
                                     {# <p class="subtitle is-6">Created: YYYY-DD-MM</p> #}
                                 </div>
                             </div>
 
                             <div class="content">
-                                <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den Button:</div>
+                                <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den
+                                    Button:
+                                </div>
                                 <hr/>
-                                <form method="post" action="/delete">
+                                <form method="post" action="./lock">
+                                    {{ csrf_input }}
                                     <button type="submit" class="button is-warning">
-                                        Karte registrieren
+                                        Karte sperren
                                     </button>
                                 </form>
                             </div>
