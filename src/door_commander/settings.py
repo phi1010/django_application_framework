@@ -93,8 +93,7 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
         },
         # Don't show OPA sidecar activity when debugging
         'opa_bundles.views': {
-            'level': 'WARNING',
-            'handlers': ['console'],
+            'level': 'DEBUG',
         }
     },
 }
