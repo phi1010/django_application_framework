@@ -37,7 +37,8 @@ def home(request):
         can_open_doors=can_open_doors,
         doors=user_doors,
         doors_status=doors_status,
-        show_location_hint=check_location_hint(request)
+        show_location_hint=check_location_hint(request),
+        messages=messages.get_messages(request),
     )
     return render(request, 'web_homepage/index.html', context=context)
     # return redirect("https://betreiberverein.de/impressum/")
