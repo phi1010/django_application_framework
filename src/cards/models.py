@@ -1,11 +1,11 @@
 import random
 import uuid
 
-import koremutake
 from django.db import models
 
 from accounts.models import User
 from door_commander import settings
+from doors.models import Door
 
 
 class Card(models.Model):
@@ -20,3 +20,17 @@ class Card(models.Model):
     def __str__(self):
         return str(self.id)
 
+
+class RegistrationTerminal(models.Model):
+    _singleton = models.BooleanField(default=True, editable=False, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.TextField(unique=True, help_text="This is the name of the registration terminal")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    door = models.ForeignKey(
+        Door, on_delete=models.CASCADE, related_name="registration_terminals",
+        help_text="This refers to the door that this registration terminal is assigned to"
+    )
+
+    def __str__(self):
+        return self.name

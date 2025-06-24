@@ -38,7 +38,8 @@
                                 <div class="content">
                                     <div>ID: {{ card.id }}</div>
                                     <div>Karte registriert: {{ card.created_at.strftime("%Y-%m-%d") }}</div>
-                                    <div>Karte zuletzt verwendet: {{ card.last_used_at.strftime("%Y-%m-%d %H:%M") if card.last_used_at else "Noch nicht verwendet" }}</div>
+                                    {# <div>Karte zuletzt
+                                        verwendet: {{ card.last_used_at.strftime("%Y-%m-%d %H:%M") if card.last_used_at else "Noch nicht verwendet" }}</div> #}
                                     <hr/>
 
                                     <form method="post" action="{{ url('cards-modify', kwargs={'card_id': card.id}) }}">
@@ -47,7 +48,8 @@
                                             Karte löschen
                                         </button>
                                         {% if not locked %}
-                                            <button type="submit" class="button is-warning" name="action" value="disable">
+                                            <button type="submit" class="button is-warning" name="action"
+                                                    value="disable">
                                                 Karte sperren
                                             </button>
                                         {% endif %}
@@ -58,36 +60,38 @@
                         </div>
                     </div>
                 {% endfor %}
-                <div class="cell">
+                {% if can_register_card %}
+                    <div class="cell">
 
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="media">
-                                <div class="media-left">
-                                    <img src="{{ static('cards/fa6-regular--id-card.svg') }}" height="48px"
-                                         width="48px">
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="media">
+                                    <div class="media-left">
+                                        <img src="{{ static('cards/fa6-regular--id-card.svg') }}" height="48px"
+                                             width="48px">
+                                    </div>
+                                    <div class="media-content">
+                                        <p class="title is-4">Neue Karte hinzufügen</p>
+                                        <p class="subtitle is-6">oder eigene gesperrte Karte entsperren</p>
+                                    </div>
                                 </div>
-                                <div class="media-content">
-                                    <p class="title is-4">Neue Karte hinzufügen</p>
-                                    <p class="subtitle is-6">oder eigene gesperrte Karte entsperren</p>
+
+                                <div class="content">
+                                    <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den
+                                        Button:
+                                    </div>
+                                    <hr/>
+                                    <form method="post" action="./register">
+                                        <button type="submit" class="button is-warning">
+                                            Karte registrieren
+                                        </button>
+                                    </form>
                                 </div>
+
                             </div>
-
-                            <div class="content">
-                                <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den
-                                    Button:
-                                </div>
-                                <hr/>
-                                <form method="post" action="./register">
-                                    <button type="submit" class="button is-warning">
-                                        Karte registrieren
-                                    </button>
-                                </form>
-                            </div>
-
                         </div>
                     </div>
-                </div>
+                {% endif %}
                 <div class="cell">
 
                     <div class="card">

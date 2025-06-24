@@ -192,6 +192,7 @@ def _add_file_to_tar(tar, filename, fd):
 # OPA calls this with POST, so CSRF protection needs to be disabled
 @csrf_exempt
 def post_decision_log(request: WSGIRequest, hostname):
+    # TODO update cards' last_used_at timestamp when decision log is received
     if not (authorization := _authorize_with_bearer(request)):
         return HttpResponse('Unauthorized', status=401)
 
