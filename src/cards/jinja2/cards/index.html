@@ -81,7 +81,8 @@
                                         Button:
                                     </div>
                                     <hr/>
-                                    <form method="post" action="./register">
+                                    <form method="post" action="{{ url("cards-register") }}">
+                                        {{ csrf_input }}
                                         <button type="submit" class="button is-warning">
                                             Karte registrieren
                                         </button>
@@ -112,7 +113,7 @@
                                     Button:
                                 </div>
                                 <hr/>
-                                <form method="post" action="./lock">
+                                <form method="post" action="{{ url("cards-disable-scan") }}">
                                     {{ csrf_input }}
                                     <button type="submit" class="button is-warning">
                                         Karte sperren
