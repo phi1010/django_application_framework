@@ -59,6 +59,7 @@ def get_django_user_data():
         user=serialize_model(user),
         permissions=[serialize_model(p) for p in user.user_permissions.all()],
         connections=[serialize_model(c) for c in user.connections.all()],
+        cards=[serialize_model(c) for c in user.cards.all()],
     ) for user in User.objects.all()}
     doors = {str(door.pk): dict(
         door=serialize_model(door),
