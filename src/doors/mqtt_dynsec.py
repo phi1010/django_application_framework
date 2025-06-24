@@ -43,6 +43,7 @@ def prepare_acls(mqtt_id) -> list[DynSecAcl]:
         DynSecAcl(acltype="subscribePattern", topic=pack_topic("door/+/", mqtt_id) + "#", ),
         DynSecAcl(acltype="publishClientSend", topic=pack_topic("door/+/presence", mqtt_id), ),
         DynSecAcl(acltype="publishClientSend", topic=pack_topic("door/+/open/confirm", mqtt_id), ),
+        DynSecAcl(acltype="publishClientSend", topic=pack_topic("door/+/card_read", mqtt_id), ),
         DynSecAcl(acltype="publishClientSend", topic=pack_topic("locator/+/", mqtt_id) + "#", ),
     ]
 

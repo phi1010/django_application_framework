@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -55,7 +55,7 @@ def _read_card(timeout=30):
     if not card_read_event:
         return None
 
-    if timeout and card_read_event.when < datetime.now() - timedelta(seconds=timeout):
+    if timeout and card_read_event.when < datetime.now(UTC) - timedelta(seconds=timeout):
         log.warning("Card read event is too old, ignoring it.")
         return None
     card = Card.objects.filter(secret_id=card_read_event.card_secret_id).first()
@@ -95,9 +95,12 @@ def register(request):
     if card.owner is not None:
 
         if card.owner == request.user:
-            card.disabled = False
-            card.save()
-            messages.success(request, "Karte wurde entsperrt")
+            if card.disabled:
+                card.disabled = False
+                card.save()
+                messages.success(request, "Karte wurde entsperrt")
+            else:
+                messages.info(request, "Karte ist bereits registriert und aktiv.")
         else:
             # TODO Karte sofort sperren?
             # Karte wird nicht auf den aktuellen Nutzer um-registriert, da Karten evtl. gegen Pfand ausgegeben wurden
@@ -107,9 +110,9 @@ def register(request):
         card.owner = request.user
         card.disabled = False
         card.save()
-    messages.success(request, "Karte wurde registriert.")
+        messages.success(request, "Karte wurde registriert.")
 
-    return None
+    return redirect(home)
 
 
 def disable_scan(request):
@@ -119,7 +122,8 @@ def disable_scan(request):
                        "Karte konnte nicht gelesen werden. Bitte Karte erneut an das Lesegerät halten und Aktion wiederholen.")
         return redirect(home)
     card.disabled = True
-    messages.success("Karte wurde gesperrt.")
+    card.save()
+    messages.success(request, "Karte wurde gesperrt.")
     return redirect(home)
 
 
