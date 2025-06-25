@@ -62,5 +62,5 @@ uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
 dn: cn=zugangsberechtigt,ou=groups,dc=betreiberverein,dc=de
 cn: zugangsberechtigt
 objectclass: groupOfUniqueNames
-uniquemember: uid=zugangsberechtigt_nord_eg,ou=users,dc=betreiberverein,dc=de
-uniquemember: uid=zugangsberechtigt_nord_ug,ou=users,dc=betreiberverein,dc=de
+uniquemember: cn=zugangsberechtigt_nord_eg,ou=groups,dc=betreiberverein,dc=de
+uniquemember: cn=zugangsberechtigt_nord_ug,ou=groups,dc=betreiberverein,dc=de
