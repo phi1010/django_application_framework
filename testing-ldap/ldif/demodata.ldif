@@ -1,52 +1,66 @@
-dn: ou=users,dc=example,dc=org
+dn: ou=users,dc=betreiberverein,dc=de
 objectClass: organizationalUnit
 ou: users
 
-dn: uid=jdoe,ou=users,dc=example,dc=org
-objectClass: inetOrgPerson
-objectClass: posixAccount
-objectClass: shadowAccount
-cn: John Doe
-sn: Doe
-uid: jdoe
-uidNumber: 1000
-gidNumber: 1000
-homeDirectory: /home/jdoe
-loginShell: /bin/bash
-mail: jdoe@example.org
-userPassword: secret123
-displayName: John Doe
-telephoneNumber: +1 555 123 4567
-employeeNumber: 12345
-description: Demo user John Doe
+dn: ou=groups,dc=betreiberverein,dc=de
+objectClass: organizationalUnit
+ou: groups
 
-dn: uid=asmith,ou=users,dc=example,dc=org
-objectClass: inetOrgPerson
-objectClass: posixAccount
-objectClass: shadowAccount
-cn: Audrey Smith
-sn: Smith
-uid: asmith
-uidNumber: 1001
-gidNumber: 1000
-homeDirectory: /home/asmith
-loginShell: /bin/bash
-mail: asmith@example.org
-userPassword: secret456
-displayName: Audrey Smith
-telephoneNumber: +1 555 987 6543
-employeeNumber: 12346
-description: Demo user Audrey Smith
+dn: uid=user1,ou=users,dc=betreiberverein,dc=de
+cn: Vorname1
+mail: mail1@example.com
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+sn: Nachname1
+uid: user1
+#structuralobjectclass: inetOrgPerson
+#createtimestamp: 20210101120000Z
+#creatorsname: cn=admin,dc=betreiberverein,dc=de
+#entrycsn: 20000000000000.000000Z#000000#000#000000
+#entrydn: uid=user1,ou=users,dc=betreiberverein,dc=de
+#entryuuid: 08e5c5a4-51e6-11f0-9fe2-0242ac120002
+#hassubordinates: FALSE
+#memberof: cn=zugangsberechtigt,ou=groups,dc=betreiberverein,dc=de
+#memberof: cn=zugangsberechtigt_nord_eg,ou=groups,dc=betreiberverein,dc=de
+#memberof: cn=zugangsberechtigt_nord_ug,ou=groups,dc=betreiberverein,dc=de
+#memberof: cn=mitglied,ou=groups,dc=betreiberverein,dc=de
+#modifiersname: cn=admin,dc=betreiberverein,dc=de
+#modifytimestamp: 20210101120000Z
+#pwdchangedtime: 20210101120000Z
+#subschemasubentry: cn=Subschema
 
-dn: cn=users,ou=users,dc=example,dc=org
-objectClass: posixGroup
-cn: users
-gidNumber: 1000
-memberUid: jdoe
-memberUid: asmith
+dn: uid=user2,ou=users,dc=betreiberverein,dc=de
+cn: Vorname2
+mail: mail2@example.com
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+sn: Nachname2
+uid: user2
 
-dn: cn=admins,ou=users,dc=example,dc=org
-objectClass: groupOfNames
-cn: admins
-member: uid=jdoe,ou=users,dc=example,dc=org
-description: Admin group with John Doe as member
+dn: cn=emptygroup,ou=groups,dc=betreiberverein,dc=de
+cn: emptygroup
+objectclass: groupOfUniqueNames
+uniquemember: cn=empty-membership-placeholder
+
+dn: cn=mitglied,ou=groups,dc=betreiberverein,dc=de
+cn: mitglied
+objectclass: groupOfUniqueNames
+uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
+uniquemember: uid=user2,ou=users,dc=betreiberverein,dc=de
+
+dn: cn=zugangsberechtigt_nord_eg,ou=groups,dc=betreiberverein,dc=de
+cn: zugangsberechtigt_nord_eg
+objectclass: groupOfUniqueNames
+uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
+uniquemember: uid=user2,ou=users,dc=betreiberverein,dc=de
+
+dn: cn=zugangsberechtigt_nord_ug,ou=groups,dc=betreiberverein,dc=de
+cn: zugangsberechtigt_nord_ug
+objectclass: groupOfUniqueNames
+uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
+
+dn: cn=zugangsberechtigt,ou=groups,dc=betreiberverein,dc=de
+cn: zugangsberechtigt
+objectclass: groupOfUniqueNames
+uniquemember: uid=zugangsberechtigt_nord_eg,ou=users,dc=betreiberverein,dc=de
+uniquemember: uid=zugangsberechtigt_nord_ug,ou=users,dc=betreiberverein,dc=de
