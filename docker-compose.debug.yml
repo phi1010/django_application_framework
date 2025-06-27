@@ -67,13 +67,15 @@ services:
       - "389:389"
       - "636:636"
     environment:
-      LDAP_ORGANISATION: "Example Org"
-      LDAP_DOMAIN: "example.org"
-      # Bind to cn=admin,dc=example,dc=org
+      LDAP_ORGANISATION: "ZAM Betreiberverein"
+      LDAP_DOMAIN: "betreiberverein.de"
+      LDAP_BASE_DN: "dc=betreiberverein,dc=de"
+      # Bind to cn=admin,dc=betreiberverein,dc=de
       LDAP_ADMIN_PASSWORD: "${LDAP_PASSWORD}"
     volumes:
       - ldap-data:/var/lib/ldap
-      - ldap-config:/etc/ldap/slapd.d
+      - ldap-config:/etc/ldap/slapd.
+    command: "--loglevel debug"
 
   nginx:
     ports:
