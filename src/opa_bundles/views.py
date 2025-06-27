@@ -247,6 +247,9 @@ def _authorize_with_bearer(request: WSGIRequest):
     token = bearer.lstrip(BEARER)
     # ic(token)
     match token:
+        case "":
+            # Protect against empty tokens, when the variable is not set.
+            return None
         case settings.OPA_BUNDLE_SERVER_BEARER_TOKEN:
             authorized = OpaClientTokenAuthorization()
         case settings.OPA_BEARER_TOKEN:
