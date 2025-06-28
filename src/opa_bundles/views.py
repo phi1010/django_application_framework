@@ -21,7 +21,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from icecream import ic
-from ldap3.core.exceptions import LDAPInvalidFilterError, LDAPCursorAttributeError
+from ldap3.core.exceptions import LDAPInvalidFilterError, LDAPCursorAttributeError, LDAPCommunicationError
 
 from accounts.models import User
 from door_commander import settings
@@ -48,6 +48,12 @@ def get_ldap_data():
                         try:
                             result = ldap.query_ldap(query_pattern, variables, attributes)
                             data[query_group] += result
+                        # https://ldap3.readthedocs.io/en/latest/exceptions.html
+                        # if the LDAP server goes down, we want to keep the historical bundle data, and not deliver an empty bundle.
+                        except LDAPCommunicationError as e:
+                            log.error(f"LDAP communication error, delivering no bundle without LDAP data: {e}")
+                            raise
+                        # if the query is invalid, we want to log it, but still deliver the bundle.
                         except Exception as e:
                             log.error(
                                 f"Failed to query LDAP, delivering bundle without LDAP data: {e}, query= {query!r} % {variables} -> {attributes}")
