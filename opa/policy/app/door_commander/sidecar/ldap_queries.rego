@@ -1,4 +1,4 @@
-package app.door_commander.ldap
+package app.door_commander.sidecar.ldap_queries
 
 ### Query only users that are known to the Django application.
 #queries.users contains {"query":query_pattern, "variables":variables, "attributes":attributes} if {

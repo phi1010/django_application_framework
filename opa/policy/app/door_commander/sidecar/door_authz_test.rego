@@ -1,11 +1,11 @@
-package app.door_commander.physical_access_test
-import data.app.door_commander.physical_access
+package app.door_commander.sidecar.door_authz_test
+import data.app.door_commander.sidecar.door_authz
 #import future.keywords
 
 
 
 test_allow_by_role if {
-    physical_access.allow_member_open with input as {
+    door_authz.allow_member_open with input as {
           "action": "open",
           "door": {
             "door": {
@@ -110,12 +110,12 @@ test_allow_by_role if {
 
 
 test_no_input if {
-    not physical_access.allow_member_open with input as {}
+    not door_authz.allow_member_open with input as {}
 }
 
 
 test_deny_wrong_door if {
-    not physical_access.allow_member_open with input as {
+    not door_authz.allow_member_open with input as {
           "action": "open",
           "door": {
             "door": {
@@ -219,7 +219,7 @@ test_deny_wrong_door if {
 
 
 test_deny_wrong_role if {
-    not physical_access.allow_member_open with input as {
+    not door_authz.allow_member_open with input as {
           "action": "open",
           "door": {
             "door": {
@@ -321,7 +321,7 @@ test_deny_wrong_role if {
 }
 
 test_deny_wrong_location if {
-    not physical_access.allow_member_open with input as {
+    not door_authz.allow_member_open with input as {
           "action": "open",
           "door": {
             "door": {

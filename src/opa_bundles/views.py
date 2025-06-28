@@ -36,7 +36,11 @@ log = logging.getLogger(__name__)
 
 
 def get_ldap_data():
-    ldap_query_groups = get_data_result("app/door_commander/ldap/queries", None) or dict()
+    try:
+        ldap_query_groups = get_data_result("app/door_commander/sidecar/ldap_queries/queries", None) or dict()
+    except:
+        # If the LDAP queries are not available, we don't want to crash the bundle generation.
+        return None
     data = dict()
     with LdapQuerier() as ldap:
         ldap: LdapQuerier
@@ -90,7 +94,7 @@ def get_bundle(request, filename: str):
                 tar = tar_file.tar
                 _add_policies_and_data_to_bundle(hashes, tar)
 
-                data = get_data_result("app/door_commander/door_authz", None)
+                data = get_data_result("app/door_commander/sidecar/ldap_export", None)
                 relpath = "sidecar/data.json"
                 _add_json_to_bundle(data, hashes, relpath, tar)
 
@@ -156,7 +160,7 @@ def _add_file_to_tar_and_hash(file, hashes, path, tar):
 def get_download_or_not_modified(download_filename, fd, content_hashes, request):
     # Generate an ETAG with sha256 hash of the file content
     etag = hashlib.sha256(json.dumps(content_hashes).encode("utf-8")).hexdigest()
-    etag = "W/"+json.dumps(etag)
+    etag = "W/" + json.dumps(etag)
     request_etag = request.headers.get("If-None-Match")
     if request_etag == etag:
         log.debug(f"ETag {etag} matches, returning 304 Not Modified")

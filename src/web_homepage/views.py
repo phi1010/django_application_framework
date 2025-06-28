@@ -59,18 +59,18 @@ def create_door_info(door):
 
 def check_can_open_door(request, door):
     user_dict = create_request_user_info(request)
-    has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="open",user=user_dict,door=create_door_info(door)))
+    has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(action="open",user=user_dict,door=create_door_info(door)))
     return has_permission
 def check_can_view_door(request, door):
     if door.registration_terminals.exists():
         return False
     user_dict = create_request_user_info(request)
-    has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="view",user=user_dict,door=create_door_info(door)))
+    has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(action="view",user=user_dict,door=create_door_info(door)))
     return has_permission
 
 def check_location_hint(request):
     user_dict = create_request_user_info(request)
-    has_permission = get_allowed_result("app/door_commander/physical_access", dict(user=user_dict), key="show_location_hint")
+    has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(user=user_dict), key="show_location_hint")
     return has_permission
 
 
