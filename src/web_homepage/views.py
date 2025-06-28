@@ -37,7 +37,8 @@ def home(request):
         can_open_doors=can_open_doors,
         doors=user_doors,
         doors_status=doors_status,
-        show_location_hint=check_location_hint(request)
+        show_location_hint=check_location_hint(request),
+        messages=messages.get_messages(request),
     )
     return render(request, 'web_homepage/index.html', context=context)
     # return redirect("https://betreiberverein.de/impressum/")
@@ -61,6 +62,8 @@ def check_can_open_door(request, door):
     has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="open",user=user_dict,door=create_door_info(door)))
     return has_permission
 def check_can_view_door(request, door):
+    if door.registration_terminals.exists():
+        return False
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="view",user=user_dict,door=create_door_info(door)))
     return has_permission

@@ -1,22 +1,18 @@
 import json
 import threading
-import time
 from dataclasses import dataclass, field
 from json import loads
 import logging
-from numbers import Number
 
 from decorated_paho_mqtt import GenericMqttEndpoint, pack_topic
-from django.conf import settings
-from django.utils.functional import lazy
-from icecream import ic
 from paho.mqtt.client import MQTTMessage
-from pymaybe import maybe
-from doors.models import Door, RemoteClient
+from doors.models import RemoteClient
 
 from django.conf import settings
 from doors.models import Door
 import lazy_object_proxy
+
+from wait_until import wait_until
 
 CV_WAIT_TIMEOUT = 10
 
@@ -47,6 +43,7 @@ def prepare_acls(mqtt_id) -> list[DynSecAcl]:
         DynSecAcl(acltype="subscribePattern", topic=pack_topic("door/+/", mqtt_id) + "#", ),
         DynSecAcl(acltype="publishClientSend", topic=pack_topic("door/+/presence", mqtt_id), ),
         DynSecAcl(acltype="publishClientSend", topic=pack_topic("door/+/open/confirm", mqtt_id), ),
+        DynSecAcl(acltype="publishClientSend", topic=pack_topic("door/+/card_read", mqtt_id), ),
         DynSecAcl(acltype="publishClientSend", topic=pack_topic("locator/+/", mqtt_id) + "#", ),
     ]
 
@@ -218,14 +215,6 @@ def start_connection():
 
 
 admin_mqtt: MqttAdminEndpoint = lazy_object_proxy.Proxy(start_connection)
-
-
-def wait_until(condition, interval=0.1, timeout=1, *args):
-    start = time.time()
-    while not (result := condition(*args)) and time.time() - start < timeout:
-        time.sleep(interval)
-    # True if condition fulfilled
-    return result
 
 
 def update_mqtt_dynamic_security():

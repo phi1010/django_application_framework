@@ -59,6 +59,7 @@ def get_django_user_data():
         user=serialize_model(user),
         permissions=[serialize_model(p) for p in user.user_permissions.all()],
         connections=[serialize_model(c) for c in user.connections.all()],
+        cards=[serialize_model(c) for c in user.cards.all()],
     ) for user in User.objects.all()}
     doors = {str(door.pk): dict(
         door=serialize_model(door),
@@ -192,6 +193,7 @@ def _add_file_to_tar(tar, filename, fd):
 # OPA calls this with POST, so CSRF protection needs to be disabled
 @csrf_exempt
 def post_decision_log(request: WSGIRequest, hostname):
+    # TODO update cards' last_used_at timestamp when decision log is received
     if not (authorization := _authorize_with_bearer(request)):
         return HttpResponse('Unauthorized', status=401)
 
