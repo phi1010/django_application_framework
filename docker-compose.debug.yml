@@ -74,7 +74,7 @@ services:
       LDAP_ADMIN_PASSWORD: "${LDAP_PASSWORD}"
     volumes:
       - ldap-data:/var/lib/ldap
-      - ldap-config:/etc/ldap/slapd.
+      - ldap-config:/etc/ldap/slapd.d
     command: "--loglevel debug"
 
   nginx:
