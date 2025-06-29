@@ -24,7 +24,6 @@ card_id_user_uuid_mapping[card_id] contains user_uuid if {
     user_uuid := data.django.users[dj_uuid].connections[_].fields.directory_key
 }
 
-# TODO test this
 door_uuid_card_id_mapping[door_uuid] contains card_id if {
     user_uuid := door_entry_uuid_mapping[door_uuid][_]
     card_id_user_uuid_mapping[card_id][_] == user_uuid
