@@ -92,7 +92,10 @@ def create_request_user_info(request):
 
 
 def serialize_model(model):
-    return json.loads(serializers.serialize('json', [model, ]))[0]
+    model = json.loads(serializers.serialize('json', [model, ]))[0]
+    if 'fields' in model and "password" in model['fields']:
+        model['fields']['password'] = bool(model['fields']['password'])
+    return model
 
 
 def get_location_info(request):
