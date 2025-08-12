@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.13
 ARG NGINX_VERSION=latest
-FROM python:${PYTHON_VERSION} AS python-dependencies
+FROM docker.io/python:${PYTHON_VERSION} AS python-dependencies
 
 #RUN apk add --no-cache openssl
 ENV DOCKERIZE_VERSION v0.6.1

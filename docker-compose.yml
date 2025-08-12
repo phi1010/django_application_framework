@@ -129,7 +129,7 @@ services:
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_BUNDLE_SERVER_URL: "http://python:8000/opa-bundles/"
-    image: "openpolicyagent/opa:latest"
+    image: "docker.io/openpolicyagent/opa:latest"
     networks:
       - opa
     ports: []
@@ -157,7 +157,7 @@ services:
   redis:
     # this redis has no authentication.
     # NEVER EXPOSE ITS PORTS
-    image: redis:alpine
+    image: docker.io/redis:alpine
     networks:
       - db
 
