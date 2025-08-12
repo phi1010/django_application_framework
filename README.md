@@ -3,3 +3,5 @@
 This is an example for a django application packaged in a docker container.
 
 This was stripped down from https://github.com/zam-haus/door_commander/commit/b107fbae711e0bca8db5edd21766f0416e080408
+
+Add the host to ALLOWED_HOSTS in .env file
