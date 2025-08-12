@@ -11,7 +11,7 @@ from icecream import ic
 
 from accounts.models import User, UserDirectory, UserConnection
 from django.conf import settings
-from doors.models import _PERMISSION_OPEN_DOOR, PERMISSION_OPEN_DOOR
+from myapp.models import _PERMISSION_OPEN_DOOR, PERMISSION_OPEN_DOOR
 from pymaybe import maybe
 
 log = getLogger(__name__)

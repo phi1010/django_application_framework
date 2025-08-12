@@ -7,9 +7,4 @@ max_requests_jitter = 100
 
 
 def post_worker_init(worker):
-    import clientipaddress.mqtt
-    import doors.mqtt
-    # start the mqtt connections by querying the lazy objects.
-    # the retain messages will be processed a few seconds later asynchronously, we cannot wait for them here.
-    clientipaddress.mqtt.wifi_locator_mqtt.__class__
-    doors.mqtt.door_commander_mqtt.__class__
+    pass # TODO initialize worker here if needed, e.g. persistent connections, etc.

@@ -5,20 +5,6 @@
 version: "3.4"
 services:
 
-  mqtt:
-    image: eclipse-mosquitto
-    volumes:
-      - door-commander-mosquitto-log:/mosquitto/log
-      - door-commander-mosquitto-data:/mosquitto/data
-      - ./mosquitto/config/:/mosquitto/config/:ro
-      - door-commander-mosquitto-dynconfig:/mosquitto/dyn-config/
-    networks:
-      - web
-      - mqtt
-      - inventory_management
-    ports:
-      - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
-    restart: unless-stopped
 
   db:
     #image: postgres
@@ -63,15 +49,12 @@ services:
       OIDC_OP_USER_ENDPOINT:
       OIDC_OP_AUTHORIZATION_ENDPOINT:
       OIDC_OP_TOKEN_ENDPOINT:
-      OPA_BUNDLE_SERVER_BEARER_TOKEN:
       DJANGO_SECRET:
       DJANGO_SALT:
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD_DJANGO}'
       POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
       POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
       POSTGRES_HOST: "db"
-      MQTT_PASSWD_CONTROLLER:
-      MQTT_CONNECTION: '{"host":"mqtt", "port":1883, "keepalive":10}'
       DJANGO_LOGGING:
         # language=json
         '
@@ -118,7 +101,6 @@ services:
       - db
       - opa
       - web
-      - mqtt
     ports: []
       # - "127.0.0.1:8000:8000"
     restart: unless-stopped
@@ -191,11 +173,9 @@ services:
       - db
     networks:
       - db
-      - mqtt
 
 
 networks:
-  mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
     #external:
@@ -207,8 +187,5 @@ networks:
 
 volumes:
   door-commander-postgres:
-  door-commander-mosquitto-data:
-  door-commander-mosquitto-log:
   celery-beat-schedule:
   opa-persistence:
-  door-commander-mosquitto-dynconfig:

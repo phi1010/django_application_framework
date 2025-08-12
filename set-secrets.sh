@@ -82,15 +82,6 @@ if [[ ! $OPA_BEARER_TOKEN ]] ; then
 fi
 echo ::endgroup::
 
-echo ::group::OPA Bundle Bearer Token
-if [[ ! $OPA_BUNDLE_SERVER_BEARER_TOKEN ]] ; then
-  echo "Token used to connect an OPA client instance to the Django bundle server"
-  OPA_BUNDLE_SERVER_BEARER_TOKEN="$(generate_password)"
-  export OPA_BUNDLE_SERVER_BEARER_TOKEN
-  declare -p OPA_BUNDLE_SERVER_BEARER_TOKEN >>secrets.env
-fi
-echo ::endgroup::
-
 
 
 if [[ ! $OIDC_RP_CLIENT_SECRET ]] ; then

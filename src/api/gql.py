@@ -6,7 +6,7 @@ from graphql import GraphQLError
 from icecream import ic
 
 from accounts.gql import UsersQuery
-from doors.gql import DoorsQuery
+from myapp.gql import MyModelQuery
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class SecurityMiddleware(object):
 
 
 class Query(
-    DoorsQuery,
+    MyModelQuery,
     UsersQuery,
     graphene.ObjectType
 ):

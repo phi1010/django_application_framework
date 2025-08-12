@@ -21,16 +21,13 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from icecream import ic
-from ldap3.core.exceptions import LDAPInvalidFilterError, LDAPCursorAttributeError, LDAPCommunicationError
 
 from accounts.models import User
-from door_commander import settings
-from door_commander.opa import get_polices, get_data_result
-from doors.models import Door
-from opa_bundles.ldap import LdapQuerier
+from myproject import settings
+from myproject.opa import get_polices, get_data_result
+from myapp.models import MyModel
 from web_homepage.views import serialize_model
-from door_commander.opa import get_polices
-from doors.models import RemoteClient
+from myproject.opa import get_polices
 
 log = logging.getLogger(__name__)
 
@@ -73,7 +70,7 @@ def get_django_user_data():
     ) for user in User.objects.all()}
     doors = {str(door.pk): dict(
         door=serialize_model(door),
-    ) for door in Door.objects.all()}
+    ) for door in MyModel.objects.all()}
     data = dict(users=users, doors=doors)
     return data
 
@@ -86,20 +83,6 @@ def get_bundle(request, filename: str):
     download_filename = filename.split("/")[-1]
 
     match filename:
-
-        case "door_authz.tar.gz":
-            # fd = open(path_to_file, 'rb')
-            hashes = dict()
-            with InMemoryTarFile() as tar_file:
-                tar = tar_file.tar
-                _add_policies_and_data_to_bundle(hashes, tar)
-
-                data = get_data_result("app/door_commander/sidecar/ldap_export", None)
-                relpath = "sidecar/data.json"
-                _add_json_to_bundle(data, hashes, relpath, tar)
-
-            response = get_download_or_not_modified(download_filename, tar_file.fd, hashes, request)
-            return response
 
         case "sidecar_authz.tar.gz":
             # ic(authorization)
@@ -203,7 +186,6 @@ def _add_file_to_tar(tar, filename, fd):
 # OPA calls this with POST, so CSRF protection needs to be disabled
 @csrf_exempt
 def post_decision_log(request: WSGIRequest, hostname):
-    # TODO update cards' last_used_at timestamp when decision log is received
     if not (authorization := _authorize_with_bearer(request)):
         return HttpResponse('Unauthorized', status=401)
 
@@ -237,12 +219,6 @@ def post_decision_log(request: WSGIRequest, hostname):
 
 
 @dataclass
-class OpaClientTokenAuthorization:
-    "An OPA running on an RPi"
-    pass
-
-
-@dataclass
 class OpaSidecarTokenAuthorization:
     "The OPA included in the docker compose file"
     pass
@@ -262,17 +238,11 @@ def _authorize_with_bearer(request: WSGIRequest):
         case "":
             # Protect against empty tokens, when the variable is not set.
             return None
-        case settings.OPA_BUNDLE_SERVER_BEARER_TOKEN:
-            authorized = OpaClientTokenAuthorization()
         case settings.OPA_BEARER_TOKEN:
             authorized = OpaSidecarTokenAuthorization()
         case _:
-            # don't use get(token=...) since that doesn't work for encrypted fields.
-            # TODO split from username:token for efficiency
-            if any(x for x in RemoteClient.objects.all() if x.token == token):
-                authorized = OpaClientTokenAuthorization()
-            else:
-                authorized = None
+            # TODO dynamic authentication
+            return None
     log.debug(
         f"Request from {request.META['REMOTE_ADDR']} to OPA bundles / decision log API was authorized as {authorized}")
     return authorized

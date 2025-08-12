@@ -1,4 +1,4 @@
 from django.contrib import admin
 
-from doors.admin import DoorAdmin
-from doors.models import Door
+from myapp.admin import MyModelAdmin
+from myapp.models import MyModel

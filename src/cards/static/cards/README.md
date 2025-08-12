@@ -1,1 +1,0 @@
-fa6 is FontAwesome6, License CC BY 4.0: https://fontawesome.com/license/free
