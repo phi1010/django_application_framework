@@ -63,5 +63,5 @@ VOLUME /opt/door-commander.betreiberverein.de/data/
 
 EXPOSE 8000
 ENTRYPOINT ["pipenv", "run"]
-CMD ["dockerize", "-timeout", "10s", "gunicorn", "door_commander.wsgi"]
+CMD ["dockerize", "-timeout", "10s", "gunicorn", "myproject.wsgi"]
 

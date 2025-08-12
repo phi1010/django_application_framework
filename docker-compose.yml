@@ -108,7 +108,7 @@ services:
   celery-beat:
     build: *python-build
     #image: python_image
-    command: celery -A door_commander beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
+    command: celery -A myproject beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
     volumes:
       - "celery-beat-schedule:/opt/door-commander.betreiberverein.de/data"
     environment: *python-environment
@@ -163,7 +163,7 @@ services:
 
 
   celery:
-    command: celery -A door_commander worker -l info
+    command: celery -A myproject worker -l info
     build: *python-build
     #image: python_image
     volumes: []
