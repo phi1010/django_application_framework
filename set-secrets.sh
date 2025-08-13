@@ -18,19 +18,6 @@ generate_password() { head -c32 /dev/random | base64; }
 
 
 
-echo ::group::MQTT Django Password
-if [[ ! $MQTT_PASSWD_CONTROLLER ]] ; then
-  # generate all necessary secrets and save them
-  MQTT_PASSWD_CONTROLLER="$(generate_password)"
-  export MQTT_PASSWD_CONTROLLER
-  declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
-fi
-echo "Remove mosquitto/config/dynamic-security.json if you want to reset the admin password to the one written in secrets.env"
-$COMPOSE run --rm mqtt mosquitto_ctrl dynsec init /mosquitto/dyn-config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
-echo "Allowing controller to publish messages to normal topics..."
-./mqtt-dynsec.sh addroleacl admin publishClientSend '#' allow 0 || true
-echo ::endgroup::
-
 
 
 echo ::group::pgSQL Superuser Password
@@ -49,9 +36,7 @@ if [[ ! $POSTGRES_PASSWORD_DJANGO ]] ; then
   declare -p POSTGRES_PASSWORD_DJANGO >>secrets.env
 fi
 USER="${POSTGRES_USER_DJANGO}" PASSWORD="${POSTGRES_PASSWORD_DJANGO}" DB="${POSTGRES_DB_DJANGO}" \
-  $COMPOSE run --rm \
-  -e USER -e PASSWORD -e DB \
-  db /docker-postgres-run-command.sh /update_other_user.sh
+  $COMPOSE run --rm -e USER="${POSTGRES_USER_DJANGO}" -e PASSWORD="${POSTGRES_PASSWORD_DJANGO}" -e DB="${POSTGRES_DB_DJANGO}" db /docker-postgres-run-command.sh /update_other_user.sh
 echo ::endgroup::
 
 

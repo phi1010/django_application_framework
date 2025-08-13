@@ -1,6 +1,6 @@
 #default_decision: /http/example/authz/allow
 
-door_commander:
+myproject:
   # Additional data to use in the policies via: opa.runtime().door_commander.custom
   environment: "django"
   hostname: "opa"

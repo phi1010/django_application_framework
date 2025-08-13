@@ -108,7 +108,7 @@ services:
   celery-beat:
     build: *python-build
     #image: python_image
-    command: celery -A door_commander beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
+    command: celery -A myproject beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
     volumes:
       - "celery-beat-schedule:/opt/door-commander.betreiberverein.de/data"
     environment: *python-environment
@@ -129,7 +129,7 @@ services:
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_BUNDLE_SERVER_URL: "http://python:8000/opa-bundles/"
-    image: "openpolicyagent/opa:latest"
+    image: "docker.io/openpolicyagent/opa:latest"
     networks:
       - opa
     ports: []
@@ -157,13 +157,13 @@ services:
   redis:
     # this redis has no authentication.
     # NEVER EXPOSE ITS PORTS
-    image: redis:alpine
+    image: docker.io/redis:alpine
     networks:
       - db
 
 
   celery:
-    command: celery -A door_commander worker -l info
+    command: celery -A myproject worker -l info
     build: *python-build
     #image: python_image
     volumes: []
