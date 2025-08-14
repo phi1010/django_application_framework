@@ -37,10 +37,6 @@ services:
       OPA_URL: "http://opa:8181/"
       OPA_BUNDLE_DIRECTORY: "/data/opa-bundle"
       ALLOWED_HOSTS:
-      LDAP_BASE_DN:
-      LDAP_BIND_DN:
-      LDAP_PASSWORD:
-      LDAP_URL:
       OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
       OIDC_RP_SIGN_ALGO:
@@ -174,18 +170,46 @@ services:
     networks:
       - db
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    restart: always
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - 9090:9090
+    networks:
+      - web
+      - monitoring
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
+  monitoring: # prometheus <--> grafana
   db: # psql <--> django
   web: # nginx <--> django
-    #external:
-    #  name: nginx_door_commander_external
   inventory_management:
-    #external:
-    #  name: nginx_inventory_management_external
   opa: #
 
 volumes:
   door-commander-postgres:
   celery-beat-schedule:
   opa-persistence:
+  prometheus_data:
+  grafana_data:

@@ -23,6 +23,7 @@ redis = "*"
 lazy-object-proxy = "*"
 django-fernet-encrypted-fields = "*"
 ldap3 = "*"
+django-prometheus = "*"
 
 [dev-packages]
 selenium = "*"

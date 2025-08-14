@@ -1,14 +1,14 @@
 import graphene
 from graphene_django import DjangoObjectType
 
-from myapp.models import MyModel as DoorModel
+from myapp.models import MyModel as DjangoModel
 
 
 class MyModel(DjangoObjectType):
     class Meta:
-        model = DoorModel
+        model = DjangoModel
 
-    status = graphene.Field('doors.gql.MyModelStatus')
+    status = graphene.Field('myapp.gql.MyModelStatus')
 
     def resolve_status(self, info):
         return # TODO
@@ -34,7 +34,7 @@ class MyModelQuery(graphene.ObjectType):
     models_status = graphene.List(MyModelStatus)
 
     def resolve_models(self, info):
-        return MyModel.objects.all()
+        return DjangoModel.objects.all()
 
     def resolve_models_status(self, info):
         return None # TODO

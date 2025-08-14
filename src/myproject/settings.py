@@ -61,29 +61,31 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
     },
 
     'handlers': {
+        'metrics': {
+            'class':'myproject.logging.MetricLoggingHandler',
+        },
         'console': {
             'class': 'rich.logging.RichHandler' if RichHandler else 'logging.StreamHandler',
             'formatter': 'simple' if RichHandler else 'verbose'
         },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'metrics'],
         'level': 'DEBUG',
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            #'handlers': ['console'],
             'level': 'INFO',
-            'propagate': False,
         },
         'django.db.backends': {
             'level': 'DEBUG',
-            'handlers': ['console'],
+            #'handlers': ['console'],
         },
         'some.logger': {
-            'handlers': ['console'],
+            #'handlers': ['console'],
             'level': 'INFO',
-            'propagate': False,
+            #'propagate': False,
         },
     },
 }
@@ -389,6 +391,20 @@ CELERY_BEAT_SCHEDULE = {
     },
 } if DEBUG else {}
 
+# ================================================================
+# Metrics
+# ================================================================
+
+INSTALLED_APPS += [
+    'django_prometheus',
+]
+MIDDLEWARE = (
+        [
+            'django_prometheus.middleware.PrometheusBeforeMiddleware',
+        ] + MIDDLEWARE + [
+            'django_prometheus.middleware.PrometheusAfterMiddleware',
+        ]
+)
 # ================================================================
 # Our own functional apps
 # ================================================================

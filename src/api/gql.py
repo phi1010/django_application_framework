@@ -17,13 +17,8 @@ class SecurityMiddleware(object):
     Then raise the error again and let Graphene handle it.
     """
 
-    def on_error(self, error):
-        log.error(ic.format(error))
-        expose_details = isinstance(error, GraphQLError) or settings.DEBUG
-        raise error if expose_details else Exception("There was an exception. Ask the admin for logs.")
-
     def resolve(self, next, root, info, **args):
-        return next(root, info, **args).catch(self.on_error)
+        return next(root, info, **args)
 
 
 class Query(

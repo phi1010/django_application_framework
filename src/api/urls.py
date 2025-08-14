@@ -22,5 +22,5 @@ from django.contrib.auth.views import auth_login, LoginView
 from graphene_django.views import GraphQLView
 
 urlpatterns = [
-    path('/', GraphQLView.as_view(graphiql=True)),
+    path('', GraphQLView.as_view(graphiql=True)),
 ]

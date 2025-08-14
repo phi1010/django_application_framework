@@ -33,32 +33,7 @@ log = logging.getLogger(__name__)
 
 
 def get_ldap_data():
-    try:
-        ldap_query_groups = get_data_result("app/door_commander/sidecar/ldap_queries/queries", None) or dict()
-    except:
-        # If the LDAP queries are not available, we don't want to crash the bundle generation.
-        return None
-    data = dict()
-    with LdapQuerier() as ldap:
-        ldap: LdapQuerier
-        for query_group, queries in ldap_query_groups.items():
-            data[query_group] = []
-            for query in queries:
-                match query:
-                    case {"variables": variables, "attributes": attributes, "query": query_pattern}:
-                        try:
-                            result = ldap.query_ldap(query_pattern, variables, attributes)
-                            data[query_group] += result
-                        # https://ldap3.readthedocs.io/en/latest/exceptions.html
-                        # if the LDAP server goes down, we want to keep the historical bundle data, and not deliver an empty bundle.
-                        except LDAPCommunicationError as e:
-                            log.error(f"LDAP communication error, delivering no bundle without LDAP data: {e}")
-                            raise
-                        # if the query is invalid, we want to log it, but still deliver the bundle.
-                        except Exception as e:
-                            log.error(
-                                f"Failed to query LDAP, delivering bundle without LDAP data: {e}, query= {query!r} % {variables} -> {attributes}")
-    return data
+    return dict()
 
 
 def get_django_user_data():
@@ -66,12 +41,8 @@ def get_django_user_data():
         user=serialize_model(user),
         permissions=[serialize_model(p) for p in user.user_permissions.all()],
         connections=[serialize_model(c) for c in user.connections.all()],
-        cards=[serialize_model(c) for c in user.cards.all()],
     ) for user in User.objects.all()}
-    doors = {str(door.pk): dict(
-        door=serialize_model(door),
-    ) for door in MyModel.objects.all()}
-    data = dict(users=users, doors=doors)
+    data = dict(users=users)
     return data
 
 

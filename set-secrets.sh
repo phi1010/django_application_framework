@@ -76,13 +76,6 @@ if [[ ! $OIDC_RP_CLIENT_SECRET ]] ; then
   declare -p OIDC_RP_CLIENT_SECRET >> secrets.env
 fi
 
-if [[ ! $LDAP_PASSWORD ]] ; then
-  echo "TODO: You need to provide LDAP_PASSWORD manually."
-  LDAP_PASSWORD="password"
-  export LDAP_PASSWORD
-  declare -p LDAP_PASSWORD >> secrets.env
-fi
-
 
 
 

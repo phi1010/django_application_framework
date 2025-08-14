@@ -18,9 +18,18 @@ from myapp.models import MyModel
 
 log = logging.getLogger(__name__)
 
+import prometheus_client
+
+COUNTER = prometheus_client.Counter("homepage_requests_total", "Total number of homepage requests")
 
 
 def home(request):
+    COUNTER.inc()
+    logging.critical("Foo")
+    logging.warning("Bar")
+    logging.error("Baz")
+    logging.info("Info")
+    logging.debug("Debug")
     user_models = list(mymodel for mymodel in MyModel.objects.all() if check_has_model_permission(request, mymodel, action="view"))
     user_models.sort(key=lambda d: d.order)
     context= dict(

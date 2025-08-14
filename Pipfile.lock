@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "81a0de0826239999dc5c373e13c824b70b09bb3f7f6e499a51d38b3180ac8f77"
+            "sha256": "c925745179d00446b6017088e1e8e1a755dfa30b5c0bed6acb4ae8f85d81b4fd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -363,6 +363,14 @@
             "index": "pypi",
             "version": "==1.0.18"
         },
+        "django-prometheus": {
+            "hashes": [
+                "sha256:073628243d2a6de6a8a8c20e5b512872dfb85d66e1b60b28bcf1eca0155dad95",
+                "sha256:7fe5af7f7c9ad9cd8a429fe0f3f1bf651f0e244f77162147869eab7ec09cc5e7"
+            ],
+            "index": "pypi",
+            "version": "==2.4.1"
+        },
         "executing": {
             "hashes": [
                 "sha256:11387150cad388d62750327a53d3339fad4888b39a6fe233c3afbb54ecffd3aa",
@@ -413,11 +421,11 @@
         },
         "icecream": {
             "hashes": [
-                "sha256:14d21e3383326a69a8c1a3bcf11f83283459f0d269ece5af83fce2c0d663efec",
-                "sha256:c020917c5cb180a528dbba170250ccd8b74ebc75f2a7a8e839819bf959b9f80c"
+                "sha256:2ff97c7624340e4791cbb439df7bfe16c35095a7864fef412f9bbaaaaab09463",
+                "sha256:f5e7955472aaef413fe84dad8d53b02d8a8637273c1f0fa1eaf08ce239462ce9"
             ],
             "index": "pypi",
-            "version": "==2.1.5"
+            "version": "==2.1.6"
         },
         "idna": {
             "hashes": [
@@ -606,6 +614,14 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==1.6.0"
+        },
+        "prometheus-client": {
+            "hashes": [
+                "sha256:190f1331e783cf21eb60bca559354e0a4d4378facecf78f5428c39b675d20d28",
+                "sha256:cca895342e308174341b2cbf99a56bef291fbc0ef7b9e5412a0f26d653ba7094"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==0.22.1"
         },
         "promise": {
             "hashes": [

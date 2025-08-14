@@ -21,6 +21,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('opa-bundles/', include('opa_bundles.urls')),
     path('api/', GraphQLView.as_view(graphiql=True)),
+    path("admin/", admin.site.urls),
+    path('', include('django_prometheus.urls')),
 ]
 
 #if settings.DEBUG:
