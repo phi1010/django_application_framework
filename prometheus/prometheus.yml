@@ -17,4 +17,4 @@ scrape_configs:
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
       static_configs:
-      - targets: ['host.docker.internal:8000', 'python']
+      - targets: ['prometheus:9090','host.docker.internal:8000', 'python:80', "loki:3100", "alloy:12345"]

@@ -97,6 +97,7 @@ services:
       - db
       - opa
       - web
+      - monitoring
     ports: []
       # - "127.0.0.1:8000:8000"
     restart: unless-stopped
@@ -176,9 +177,37 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/provisioning/:/etc/grafana/provisioning/:ro
     restart: always
     networks:
+      - monitoring
+      - loki
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki
+
+
+  alloy:
+    image: grafana/alloy:latest
+    ports:
+      - 12345:12345
+      - 4317:4317
+      - 4318:4318
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    networks:
+      - loki
       - monitoring
 
   prometheus:
@@ -197,6 +226,7 @@ services:
     networks:
       - web
       - monitoring
+      - loki
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -206,6 +236,7 @@ networks:
   web: # nginx <--> django
   inventory_management:
   opa: #
+  loki: # loki <--> alloy
 
 volumes:
   door-commander-postgres:
