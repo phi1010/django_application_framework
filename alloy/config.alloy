@@ -54,7 +54,7 @@ prometheus.remote_write "django_application_framework" {
 
 prometheus.scrape "scraper" {
   targets    = prometheus.exporter.cadvisor.django_application_framework.targets
-  forward_to = [ prometheus.remote_write.django_application_framework.receiver ]
+  forward_to = [ prometheus.relabel.cadvisor.receiver ]
 
   scrape_interval = "10s"
 }
@@ -63,4 +63,19 @@ prometheus.exporter.cadvisor "django_application_framework" {
   docker_host = "unix:///var/run/docker.sock"
 
   storage_duration = "5m"
+}
+
+prometheus.relabel "cadvisor" {
+  forward_to = [prometheus.remote_write.django_application_framework.receiver]
+
+  rule {
+    regex   = "^(container_label_com_docker_compose_.+|id|container_label_maintainer|container_label_org_opencontainers_.+)"
+    action  = "labeldrop"
+  }
+
+  rule {
+    source_labels = ["__name__"]
+    regex         = "^(container_cpu_usage_seconds_total|container_fs_inodes_free|container_fs_inodes_total|container_fs_limit_bytes|container_fs_usage_bytes|container_last_seen|container_memory_usage_bytes|container_network_receive_bytes_total|container_network_tcp_usage_total|container_network_transmit_bytes_total|container_spec_memory_reservation_limit_bytes|machine_memory_bytes|machine_scrape_error)$"
+    action        = "keep"
+  }
 }
