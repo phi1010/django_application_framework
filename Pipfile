@@ -30,6 +30,8 @@ selenium = "*"
 pylint = "*"
 rich = "*"
 django-debug-toolbar = "*"
+marimo = "*"
+polars = "*"
 
 [requires]
 python_version = "3"
