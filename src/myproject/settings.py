@@ -380,16 +380,19 @@ GRAPHENE = {
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
+CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY_TASK_SEND_SENT_EVENT = True
+
 CELERY_BEAT_SCHEDULE = {
     "debug_task": {
         "task": "myproject.tasks.debug_task",
-        "schedule": crontab(minute="*/1"),
+        "schedule": crontab(minute="*"),
     },
     "some_task": {
         "task": "myapp.tasks.some_task",
-        "schedule": crontab(minute="*/15"),
+        "schedule": crontab(minute="*/2"),
     },
-} if DEBUG else {}
+}
 
 # ================================================================
 # Metrics

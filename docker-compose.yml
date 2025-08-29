@@ -33,6 +33,7 @@ services:
       - redis
     environment:
       &python-environment
+      PROMETHEUS_MULTIPROC_DIR: "/tmp"
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_URL: "http://opa:8181/"
       OPA_BUNDLE_DIRECTORY: "/data/opa-bundle"
@@ -61,25 +62,23 @@ services:
           "handlers": {
             "console": {
               "class": "logging.StreamHandler",
-              "formatter": "verbose"
+              "formatter": "verbose",
+              "level": "INFO"
+            },
+            "metrics": {
+                "class":"myproject.logging.MetricLoggingHandler"
             }
           },
           "root": {
             "handlers": [
-              "console"
+              "console","metrics"
             ],
-            "level": "INFO"
+            "level": "DEBUG"
           },
           "loggers": {
             "django": {
-              "handlers": [
-                "console"
-              ],
-              "level": "WARN",
-              "propagate": false
-            },
-            "web_homepage.views": {"level":"WARN"},
-            "ipware.ip": {"level":"ERROR"}
+              "level": "INFO"
+            }
           }
         }
         '
@@ -147,6 +146,8 @@ services:
         NGINX_VERSION: 1-alpine
     depends_on:
       - python
+    ports:
+      - "127.0.0.1:8081:8080"
     networks:
       - web
     restart: unless-stopped
@@ -170,23 +171,35 @@ services:
       - db
     networks:
       - db
-
+  celery-exporter:
+    image: danihodovic/celery-exporter
+    ports: []
+      #- "127.0.0.1:9808:9808"
+    command: --broker-url=redis://redis:6379
+    networks:
+      - db
+    depends_on:
+      - redis
   grafana:
     image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
+    ports: []
+    # - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/:ro
+    environment:
+      GF_SERVER_ROOT_URL: "http://127.0.0.1:8081/grafana"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     restart: always
     networks:
       - monitoring
       - loki
+      - web
 
   loki:
     image: grafana/loki:latest
-    ports:
-      - "3100:3100"
+    # This loki has no authentication.
+    # NEVER EXPOSE ITS PORTS
     volumes:
       - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
     command: -config.file=/etc/loki/local-config.yaml
@@ -196,10 +209,12 @@ services:
 
   alloy:
     image: grafana/alloy:latest
-    ports:
-      - 12345:12345
-      - 4317:4317
-      - 4318:4318
+    # This alloy has no authentication.
+    # NEVER EXPOSE ITS PORTS
+    #ports:
+    #  - 127.0.0.1:12345:12345
+    #  - 127.0.0.1:4317:4317
+    #  - 127.0.0.1:4318:4318
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -250,12 +265,15 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--web.enable-remote-write-receiver'
-    ports:
-      - 9090:9090
+    # This prometheus has no authentication.
+    # NEVER EXPOSE ITS PORTS
+    ports: #[]
+      - 127.0.0.1:9090:9090
     networks:
       - web
       - monitoring
       - loki
+      - db
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
